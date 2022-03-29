@@ -1,0 +1,44 @@
+---
+title: 'Blue Mesa: Data Scraping'
+author: "Stephanie Kinser"
+date: '2022-03-29'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+getwd()
+
+library(tidyverse)
+library(dplyr)
+#install.packages("lubridate")
+library(lubridate)
+#install.packages("rvest")
+library(rvest)
+
+```
+
+```{r}
+#set scraping website
+webpage <- read_html('https://climate.colostate.edu/data_access.html')
+
+webpage
+```
+
+```{r}
+#scrape variables
+Date <- webpage %>% html_nodes('td:nth-child(1)') %>% html_text()
+
+MaxT <- webpage %>% html_nodes('td:nth-child(2)') %>% html_text()
+
+MinT <- webpage %>% html_nodes('td:nth-child(3)') %>% html_text()
+
+Precip <- webpage %>% html_nodes('td:nth-child(4)') %>% html_text()
+
+Snow <- webpage %>% html_nodes('td:nth-child(5)') %>% html_text()
+```
+
+```{r}
+
+climate_df <- data.frame(as.Date(Date, format = "%Y-%m"), MaxT, MinT, Precip, Snow)
+```
+
