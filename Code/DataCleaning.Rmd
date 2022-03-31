@@ -45,19 +45,45 @@ climate$Snow <- as.numeric(climate$Snow)
 
 ```{r power}
 
-#the dates are funky here.  Still working on it.
-
 power <- power %>%
   rename(Date = ï..Date)%>%
   subset(select = c(Date, MWH))
 
-power <- power(
-  Date = as.Date(gsub("1-", "", Date)))
+power$Date <- gsub("1-", "01-", as.character(power$Date))
 
-class(power$Date)
-
-power$Date <- as.Date(power$Date, format = "%d-%b-%Y")
+power$Date <- as.Date(power$Date, format = "%d-%b-%y")
 
 
 ```
 
+
+```{r reservoir}
+
+res <- res %>%
+  rename(Date = ï..Date,
+         Elevation = Elevation..feet.,
+         Storage = Storage..af.,
+         Evaporation = Evaporation..af.,
+         Inflow = Inflow....cfs.,
+         UnregInflow = Unregulated.Inflow.....cfs.,
+         Power = Power.Release..cfs.,
+         Bypass = Bypass.Release..cfs.,
+         Spillway = Spillway.Release..cfs.,
+         Total = Total.Release..cfs.) %>%
+  subset(select = c(Date:Total))
+
+res$Date <- gsub("1-", "01-", as.character(res$Date))
+
+res$Date <- as.Date(res$Date, format = "%d-%b-%y")
+```
+ 
+ 
+```{r}
+write.csv(climate, row.names = FALSE, file = "../Data/Processed/BlueMesaClimate.csv")
+
+write.csv(power, row.names = FALSE, file = "../Data/Processed/BlueMesaPower.csv")
+
+write.csv(res, row.names = FALSE, file = "../Data/Processed/BlueMesaReservoir.csv")
+```
+
+ 
