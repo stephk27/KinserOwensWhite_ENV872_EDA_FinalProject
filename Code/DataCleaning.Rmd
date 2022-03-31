@@ -1,0 +1,63 @@
+---
+title: 'Blue Mesa: Data Cleaning'
+author: "Stephanie Kinser"
+date: '2022-03-29'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+getwd()
+
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("dplyr")
+library(dplyr)
+#install.packages("lubridate")
+library(lubridate)
+#install.packages("naniar")
+library(naniar)
+
+
+```
+
+```{r read data}
+
+climate <- read.csv("../Data/Raw/BlueMesa_Climate.csv")
+power <- read.csv("../Data/Raw/BLUEMESAPOWERPLANT.csv")
+res <- read.csv("../Data/Raw/BLUEMESARESERVOIR.csv")
+
+```
+
+```{r climate}
+
+climate <- climate %>%
+  rename(Date = ï..Date)%>%
+  replace_with_na(replace = list(Precip = c("M", "T"),
+                                 Snow = c("M", "T")))
+
+climate$Date <- as.Date(climate$Date, format = "%Y-%m")
+climate$MaxT <- as.numeric(climate$MaxT)
+climate$MinT <- as.numeric(climate$MinT)
+climate$Precip <- as.numeric(climate$Precip)
+climate$Snow <- as.numeric(climate$Snow)
+
+```
+
+```{r power}
+
+#the dates are funky here.  Still working on it.
+
+power <- power %>%
+  rename(Date = ï..Date)%>%
+  subset(select = c(Date, MWH))
+
+power <- power(
+  Date = as.Date(gsub("1-", "", Date)))
+
+class(power$Date)
+
+power$Date <- as.Date(power$Date, format = "%d-%b-%Y")
+
+
+```
+
