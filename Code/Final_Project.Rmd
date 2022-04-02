@@ -12,6 +12,7 @@ getwd()
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(lubridate)
 
 mytheme <- theme_classic(base_size = 14) +
   theme(axis.text = element_text(color = "black"), 
@@ -23,16 +24,45 @@ theme_set(mytheme)
 
 ```{r load the data}
 climate<-read.csv("./Data/Processed/BlueMesaClimate.csv")
-power<-read.csv("./Data/Processed/BlueMesaPower.csv")
+power<-read.csv("./Data/Raw/BLUEMESAPOWERPLANT.csv")
 reservoir<-read.csv("./Data/Processed/BlueMesaReservoir.csv")
 ```
 
 ```{r wrangle the data}
-#need to convert to date again - doesn't carry over from DataCleaning.Rmd
-#We need to get all the dates in the same format (year - month) to combine into one dataset for analysis but I can't get R to cooperate
-climate$Date <- format(as.Date(climate$Date, format = "%Y-%d"))
-power$Date <- as.Date(power$Date, format = "%Y-%d")
-reservoir$Date <- as.Date(reservoir$Date, format = "%Y-%m-%d")
+#getting dates in the proper format 
+climate$Date <-as.Date(climate$Date, format = "%Y-%d")
+climate <-climate %>%
+  mutate(Year = year(Date)) %>%
+  mutate(Month = rep(1:12, 19)) %>%
+  select(-c(Date))
+climate$Date<-sprintf("%d-%02d", climate$Year, climate$Month)
+climate<-climate %>%
+  select(-c(Year, Month))
+
+power<-power %>%
+  rename(Date = ï..Date)%>%
+  subset(select = c(Date, MWH))
+
+power$Date <- as.Date(power$Date, format = "%d-%b-%y")
+power<-power %>%
+  mutate(Month = month(Date)) %>%
+  mutate(Year = year(Date))%>%
+  select(-c(Date))
+power$Date<-sprintf("%d-%02d", power$Year, power$Month)
+power<- power %>%
+  select(-c(Year, Month))
+
+col_order<-c("Date", "MWH")
+power<-power[, col_order]
+
+reservoir$Date <- as.Date(reservoir$Date, format = "%d-%b-%y")
+reservoir<-reservoir %>%
+  mutate(Month = month(Date)) %>%
+  mutate(Year = year(Date))%>%
+  select(-c(Date))
+reservoir$Date<-sprintf("%d-%02d", reservoir$Year, reservoir$Month)
+reservoir<-reservoir %>%
+  select(-c(Year, Month))
 
 #make a gathered data set for data viz
 climate.longer<-pivot_longer(climate, MaxT:MinT, names_to = "Min/Max", values_to = "Temperature")
@@ -43,7 +73,8 @@ reservoir.longer<-reservoir %>%
   pivot_longer(Storage.af:Evaporation.af, names_to = "Volume_Type", values_to = "Volume_(af)")
 
 #combine power and reservoir data
-power.res<-left_join(power, reservoir)
+all.data<-left_join(reservoir, climate)
+all.data<-left_join(all.data, power)
 ```
 
 ```{r visual exploration}
