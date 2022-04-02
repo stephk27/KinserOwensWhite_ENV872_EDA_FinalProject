@@ -22,9 +22,9 @@ library(naniar)
 
 ```{r read data}
 
-climate <- read.csv("../Data/Raw/BlueMesa_Climate.csv")
-power <- read.csv("../Data/Raw/BLUEMESAPOWERPLANT.csv")
-res <- read.csv("../Data/Raw/BLUEMESARESERVOIR.csv")
+climate <- read.csv("./Data/Raw/BlueMesa_Climate.csv")
+power <- read.csv("./Data/Raw/BLUEMESAPOWERPLANT.csv")
+res <- read.csv("./Data/Raw/BLUEMESARESERVOIR.csv")
 
 ```
 
@@ -35,12 +35,11 @@ climate <- climate %>%
   replace_with_na(replace = list(Precip = c("M", "T"),
                                  Snow = c("M", "T")))
 
-climate$Date <- as.Date(climate$Date, format = "%Y-%m")
+climate$Date <- as.Date(climate$Date, format = "%Y-%d")
 climate$MaxT <- as.numeric(climate$MaxT)
 climate$MinT <- as.numeric(climate$MinT)
 climate$Precip <- as.numeric(climate$Precip)
 climate$Snow <- as.numeric(climate$Snow)
-
 ```
 
 ```{r power}
@@ -49,11 +48,7 @@ power <- power %>%
   rename(Date = ï..Date)%>%
   subset(select = c(Date, MWH))
 
-power$Date <- gsub("1-", "01-", as.character(power$Date))
-
 power$Date <- as.Date(power$Date, format = "%d-%b-%y")
-
-
 ```
 
 
@@ -61,16 +56,16 @@ power$Date <- as.Date(power$Date, format = "%d-%b-%y")
 
 res <- res %>%
   rename(Date = ï..Date,
-         Elevation = Elevation..feet.,
-         Storage = Storage..af.,
-         Evaporation = Evaporation..af.,
-         Inflow = Inflow....cfs.,
-         UnregInflow = Unregulated.Inflow.....cfs.,
-         Power = Power.Release..cfs.,
-         Bypass = Bypass.Release..cfs.,
-         Spillway = Spillway.Release..cfs.,
-         Total = Total.Release..cfs.) %>%
-  subset(select = c(Date:Total))
+         Elevation.ft = Elevation..feet.,
+         Storage.af = Storage..af.,
+         Evaporation.af = Evaporation..af.,
+         Inflow.cfs = Inflow....cfs.,
+         UnregInflow.cfs = Unregulated.Inflow.....cfs.,
+         Power.cfs = Power.Release..cfs.,
+         Bypass.cfs = Bypass.Release..cfs.,
+         Spillway.cfs = Spillway.Release..cfs.,
+         Total.cfs = Total.Release..cfs.) %>%
+  subset(select = c(Date:Total.cfs))
 
 res$Date <- gsub("1-", "01-", as.character(res$Date))
 
@@ -79,11 +74,11 @@ res$Date <- as.Date(res$Date, format = "%d-%b-%y")
  
  
 ```{r}
-write.csv(climate, row.names = FALSE, file = "../Data/Processed/BlueMesaClimate.csv")
+write.csv(climate, row.names = FALSE, file = "./Data/Processed/BlueMesaClimate.csv")
 
-write.csv(power, row.names = FALSE, file = "../Data/Processed/BlueMesaPower.csv")
+write.csv(power, row.names = FALSE, file = "./Data/Processed/BlueMesaPower.csv")
 
-write.csv(res, row.names = FALSE, file = "../Data/Processed/BlueMesaReservoir.csv")
+write.csv(res, row.names = FALSE, file = "./Data/Processed/BlueMesaReservoir.csv")
 ```
 
  
