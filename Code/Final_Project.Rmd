@@ -1,0 +1,74 @@
+---
+title: "Final Project"
+author: "Cassidy White, Stephanie Kinser, and Katie Owen"
+date: "4/2/2022"
+output: pdf_document
+---
+```{r}
+getwd()
+```
+
+```{r set libraries and theme}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+
+mytheme <- theme_classic(base_size = 14) +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "right") + 
+  theme_bw()
+theme_set(mytheme)
+```
+
+```{r load the data}
+climate.raw<-read.csv("./Data/Raw/BlueMesa_Climate.csv")
+power.raw<-read.csv("./Data/Raw/BLUEMESAPOWERPLANT.csv")
+reservoir.raw<-read.csv("./Data/Raw/BLUEMESARESERVOIR.csv")
+```
+
+```{r wrangle the data}
+climate.data<-climate.raw %>%
+  mutate(MaxT = as.integer(MaxT)) %>%
+  mutate(MinT = as.integer(MinT)) %>%
+  mutate(Date = as.Date(ï..Date, format = "%Y-%d")) %>%
+  select(-c(ï..Date))
+
+#make a gathered data set for data viz
+climate.longer<-pivot_longer(climate.data, MaxT:MinT, names_to = "Min/Max", values_to = "Temperature")
+
+power.data<-power.raw %>%
+  mutate(Date = as.Date(ï..Date, format = "%d-%b-%y")) %>%
+  select(c(Date, MWH))
+
+reservoir.data<-reservoir.raw %>%
+  mutate(Date = as.Date(ï..Date, format = "%d-%b-%y")) %>%
+  select(-c(ï..Date, X))
+
+#make a gathered data set for data viz
+reservoir.longer<-reservoir.data %>%
+  pivot_longer(Inflow....cfs.:Total.Release..cfs., names_to = "Flow_Type", values_to = "Flow_(cfs)") %>%
+  pivot_longer(Storage..af.:Evaporation..af., names_to = "Volume_Type", values_to = "Volume_(af)")
+```
+
+```{r visual exploration}
+ggplot(climate.longer) +
+  geom_point(aes(x = Date, y = Temperature, group = `Min/Max`, color = `Min/Max`)) +
+  labs(y="Temperature (F)", color = "Legend")
+
+ggplot(power.data, aes(x=Date, y=MWH))+
+  geom_line()
+
+ggplot(reservoir.data, aes(x=Date, y = Elevation..feet.))+
+  geom_line(color = "blue")+
+  ylab("Reservoir Elevation (ft)")
+
+ggplot(reservoir.longer, aes(x=Date, y = `Volume_(af)`, color = `Volume_Type`))+
+  geom_line()+
+  labs(y = "Volume (af)", color = "Legend")
+
+#Need to work on this plot
+ggplot(reservoir.longer, aes(Date, y = `Flow_(cfs)`, color = `Flow_Type`))+
+  geom_line()+
+  labs(y = "Flow (cfs)", color = "Legend")
+```
+
