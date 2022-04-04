@@ -66,10 +66,6 @@ res <- res %>%
          Spillway.cfs = Spillway.Release..cfs.,
          Total.cfs = Total.Release..cfs.) %>%
   subset(select = c(Date:Total.cfs))
-
-res$Date <- gsub("1-", "01-", as.character(res$Date))
-
-res$Date <- as.Date(res$Date, format = "%d-%b-%y")
 ```
  
  
