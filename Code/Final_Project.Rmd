@@ -24,45 +24,45 @@ theme_set(mytheme)
 
 ```{r load the data}
 climate<-read.csv("./Data/Processed/BlueMesaClimate.csv")
-power<-read.csv("./Data/Raw/BLUEMESAPOWERPLANT.csv")
+power<-read.csv("./Data/Processed/BlueMesaPower.csv")
 reservoir<-read.csv("./Data/Processed/BlueMesaReservoir.csv")
 ```
 
 ```{r wrangle the data}
 #getting dates in the proper format 
-climate$Date <-as.Date(climate$Date, format = "%Y-%d")
-climate <-climate %>%
-  mutate(Year = year(Date)) %>%
-  mutate(Month = rep(1:12, 19)) %>%
-  select(-c(Date))
-climate$Date<-sprintf("%d-%02d", climate$Year, climate$Month)
-climate<-climate %>%
-  select(-c(Year, Month))
+climate$Date <-as.Date(climate$Date, format = "%Y-%m-%d")
+# climate <-climate %>%
+#   mutate(Year = year(Date)) %>%
+#   mutate(Month = rep(1:12, 19)) %>%
+#   select(-c(Date))
+# climate$Date<-sprintf("%d-%02d", climate$Year, climate$Month)
+# climate<-climate %>%
+#   select(-c(Year, Month))
 
-power<-power %>%
-  rename(Date = ï..Date)%>%
-  subset(select = c(Date, MWH))
+# power<-power %>%
+#   rename(Date = ï..Date)%>%
+#   subset(select = c(Date, MWH))
 
-power$Date <- as.Date(power$Date, format = "%d-%b-%y")
-power<-power %>%
-  mutate(Month = month(Date)) %>%
-  mutate(Year = year(Date))%>%
-  select(-c(Date))
-power$Date<-sprintf("%d-%02d", power$Year, power$Month)
-power<- power %>%
-  select(-c(Year, Month))
+power$Date <- as.Date(power$Date, format = "%Y-%m-%d")
+# power<-power %>%
+#   mutate(Month = month(Date)) %>%
+#   mutate(Year = year(Date))%>%
+#   select(-c(Date))
+# power$Date<-sprintf("%d-%02d", power$Year, power$Month)
+# power<- power %>%
+#   select(-c(Year, Month))
 
-col_order<-c("Date", "MWH")
-power<-power[, col_order]
+# col_order<-c("Date", "MWH")
+# power<-power[, col_order]
 
 reservoir$Date <- as.Date(reservoir$Date, format = "%d-%b-%y")
-reservoir<-reservoir %>%
-  mutate(Month = month(Date)) %>%
-  mutate(Year = year(Date))%>%
-  select(-c(Date))
-reservoir$Date<-sprintf("%d-%02d", reservoir$Year, reservoir$Month)
-reservoir<-reservoir %>%
-  select(-c(Year, Month))
+# reservoir<-reservoir %>%
+#   mutate(Month = month(Date)) %>%
+#   mutate(Year = year(Date))%>%
+#   select(-c(Date))
+# reservoir$Date<-sprintf("%d-%02d", reservoir$Year, reservoir$Month)
+# reservoir<-reservoir %>%
+#   select(-c(Year, Month))
 
 #make a gathered data set for data viz
 climate.longer<-pivot_longer(climate, MaxT:MinT, names_to = "Min/Max", values_to = "Temperature")
@@ -104,7 +104,7 @@ ggplot(reservoir, aes(x=Date, y = Total.cfs))+
 
 #reservoir power production by power.cfs
 #I want to do a second axis here but it isn't working. Would also need to add a legend.
-ggplot(power.res, aes(x=Date))+
+ggplot(all.data, aes(x=Date))+
   geom_line(aes(y=Power.cfs), color = "blue")+
   geom_line(aes(y=MWH), color = "red")+
   scale_y_continuous(
