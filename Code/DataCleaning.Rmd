@@ -35,7 +35,9 @@ climate <- climate %>%
   replace_with_na(replace = list(Precip = c("M", "T"),
                                  Snow = c("M", "T")))
 
-climate$Date <- as.Date(climate$Date, format = "%Y-%d")
+climate$Date<-paste0(climate$Date, "-01")
+
+climate$Date <- as.Date(climate$Date, format = "%Y-%m-%d")
 climate$MaxT <- as.numeric(climate$MaxT)
 climate$MinT <- as.numeric(climate$MinT)
 climate$Precip <- as.numeric(climate$Precip)
