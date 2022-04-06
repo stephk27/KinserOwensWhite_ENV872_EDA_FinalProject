@@ -1,0 +1,72 @@
+---
+title: "Linear Regression"
+author: "Cassidy White"
+date: "4/6/2022"
+output: html_document
+---
+
+```{r}
+getwd()
+library(tidyverse)
+library(agricolae)
+library(corrplot)
+library(splitstackshape)
+library(matrixStats)
+```
+
+```{r load the data}
+all.data<-read.csv("./Data/Processed/AllData.csv")
+all.data$Date<-as.Date(all.data$Date, format = "%Y-%d-%m")
+all.data<-all.data %>%
+  na.omit()
+all.data.nodate<-select(all.data, -c(X, Date))
+```
+
+```{r test correlation}
+all.data.corr<-cor(all.data.nodate)
+corrplot(all.data.corr, method = "ellipse")
+```
+
+Elevation (ft) is highly correlated with storage (af).
+Inflow (cfs) is highly correlated with unregulated inflow (cfs).
+Total flow (cfs) is somewhat correlated to power flow (cfs).
+MaxT and MinT are somewhat correlated with evaporation.
+MWH is highly correlated with Power.cfs and Total.cfs.
+MinT and MaxT are highly correlated with each other.
+
+```{r Multiple Linear Regression Analysis}
+#Run a regression with all variables to take a first look
+regression.all<-lm(data = all.data, MWH ~ Elevation.ft + Storage.af + Evaporation.af + Inflow.cfs + UnregInflow.cfs + Bypass.cfs + Spillway.cfs +  MaxT + MinT + Precip + Snow + Total.cfs + Power.cfs)
+
+summary(regression.all)
+
+#Run a stepwise AIC test to find the model of best fit from all the above variables
+step(regression.all)
+
+#Choose the model of best fit from the AIC test and run below
+regression.final <- lm(data = all.data, MWH ~ Elevation.ft + Storage.af + Evaporation.af + 
+    Inflow.cfs + MaxT + Precip + Total.cfs + Power.cfs)
+
+summary(regression.final)
+
+write.csv(as.data.frame(summary(regression.final)$coef), file = "./Output/RegressionTable.csv")
+```
+
+```{r table}
+summary.table<-all.data.nodate %>%
+  summary()
+summary.table<-as.data.frame(summary.table) %>% cSplit("Freq", sep = ":", type.convert = FALSE) 
+summary.table<-summary.table %>%
+  select(Var2, Freq_1, Freq_2)
+summary.table<-pivot_wider(summary.table, names_from = Freq_1, values_from = Freq_2)
+summary.table<-select(summary.table, c(Var2, Mean, Min., Max.))
+
+sd<-colSds(as.matrix(all.data.nodate[sapply(all.data.nodate, is.numeric)]))
+sd<-as.data.frame(sd)
+summary.table<-cbind(summary.table, sd)
+
+names(summary.table)[names(summary.table)=='Var2']<-'Variable'
+
+write.csv(summary.table, file = "./Output/SummaryTable.csv")
+```
+
