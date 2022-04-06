@@ -75,6 +75,7 @@ reservoir.longer<-reservoir %>%
 #combine power and reservoir data
 all.data<-left_join(reservoir, climate)
 all.data<-left_join(all.data, power)
+write.csv(all.data, "AllData.csv")
 ```
 
 ```{r visual exploration}
