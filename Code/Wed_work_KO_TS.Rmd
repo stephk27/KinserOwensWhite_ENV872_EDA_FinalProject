@@ -1,4 +1,11 @@
 ---
+title: "Wednesday work TS"
+author: "Katherine Owens"
+date: "4/6/2022"
+output: pdf_document
+---
+
+---
 title: "Final Project"
 author: "Cassidy White, Stephanie Kinser, and Katie Owens"
 date: "4/2/2022"
