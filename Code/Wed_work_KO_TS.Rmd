@@ -1,4 +1,11 @@
 ---
+title: "Wednesday work TS"
+author: "Katherine Owens"
+date: "4/6/2022"
+output: pdf_document
+---
+
+---
 title: "Final Project"
 author: "Cassidy White, Stephanie Kinser, and Katie Owens"
 date: "4/2/2022"
@@ -6,7 +13,6 @@ output: pdf_document
 ---
 ```{r}
 getwd()
-setwd("C:/Users/cassi/OneDrive - Duke University/Documents/School/Grad School/Spring 2022/Environmental Data Analytics/KinserOwensWhite_ENV872_EDA_FinalProject/")
 ```
 
 ```{r set libraries and theme}
@@ -76,7 +82,6 @@ reservoir.longer<-reservoir %>%
 #combine power and reservoir data
 all.data<-left_join(reservoir, climate)
 all.data<-left_join(all.data, power)
-write.csv(all.data, "AllData.csv")
 ```
 
 ```{r visual exploration}
@@ -108,13 +113,11 @@ ggplot(reservoir, aes(x=Date, y = Total.cfs))+
 #I want to do a second axis here but it isn't working. Would also need to add a legend.
 ggplot(all.data, aes(x=Date))+
   geom_line(aes(y=Power.cfs), color = "blue")+
-  ylab("Power Flow (cfs)")
-  #geom_line(aes(y=MWH), color = "red")+
-  #scale_y_continuous(
-    #name = "Power Flow (cfs)")#,
-    #sec_axis(name = waiver(MWH)))
-
-ggplot(all.data, aes(x="El"))    
+  geom_line(aes(y=MWH), color = "red")+
+  scale_y_continuous(
+    name = "Power Flow (cfs)"#,
+    #sec_axis(name = waiver(MWH))
+    )
 ```
 
 
@@ -134,7 +137,6 @@ All_months.data <-
   all.data)
 #checked data frame and should have 227 months, check!
 ```
-
 ```{r visualize time series}
 #Elevation, power flow, Min/MaxT
 

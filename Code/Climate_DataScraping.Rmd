@@ -42,3 +42,6 @@ Snow <- webpage %>% html_nodes('td:nth-child(5)') %>% html_text()
 climate_df <- data.frame(as.Date(Date, format = "%Y-%m"), MaxT, MinT, Precip, Snow)
 ```
 
+>Methods for data scraping: #when pulling data, base on power plant limited data (res/platn), removed footnotes and changed column names ; crystal might be okay
+#google crystal reservoir in google maps , see if you can find a nearby town that matches climate data, montrose was close to crystal
+#blue mesa lake, copy and paste table into excel and save as csv, or try magnifying glass 
