@@ -49,7 +49,7 @@ regression.final <- lm(data = all.data, MWH ~ Elevation.ft + Storage.af + Evapor
 
 summary(regression.final)
 
-write.csv(as.data.frame(summary(regression.final)$coef), file = "./Output/RegressionTable.csv")
+#write.csv(as.data.frame(summary(regression.final)$coef), file = "./Output/RegressionTable.csv")
 ```
 
 ```{r table}
@@ -67,6 +67,6 @@ summary.table<-cbind(summary.table, sd)
 
 names(summary.table)[names(summary.table)=='Var2']<-'Variable'
 
-write.csv(summary.table, file = "./Output/SummaryTable.csv")
+#write.csv(summary.table, file = "./Output/SummaryTable.csv")
 ```
 
