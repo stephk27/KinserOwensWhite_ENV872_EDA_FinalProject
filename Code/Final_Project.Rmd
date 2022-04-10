@@ -131,6 +131,7 @@ All_months.data <-
   all.data)
 #checked data frame and should have 227 months, check!
 ```
+
 ```{r visualize time series}
 #Elevation, power flow, Min/MaxT
 
