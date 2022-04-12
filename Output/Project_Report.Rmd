@@ -5,12 +5,13 @@ output:
     fig_caption: yes
     number_sections: yes
 geometry: margin=2.54cm
-title: "Insert title of project here"
+title: "Blue Mesa Power Production Analysis"
 subtitle: "Web address for GitHub repository"
-author: "Name"
+author: "Stephanie Kinser, Katie Owens, Cassidy White"
 fontsize: 12pt
 mainfont: Times New Roman
-
+editor_options: 
+  chunk_output_type: console
 ---
 
 \newpage
@@ -23,18 +24,47 @@ mainfont: Times New Roman
 
 ```{r setup, include=FALSE}
 # Set your working directory
+getwd()
 
 # Load your packages
+#install.packages("dplyr")
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+#install.packages("tidyr")
+library(tidyr)
+#install.packages("zoo")
+library(zoo)
+#install.packages("agricolae")
+library(agricolae)
+#install.packages("corrplot")
+library(corrplot)
+#install.packages("splitstackshape")
+library(splitstackshape)
+#install.packages("matrixStats")
+library(matrixStats)
 
 # Set your ggplot theme
+mytheme <- theme_classic(base_size = 14) +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "right") + 
+  theme_bw()
+theme_set(mytheme)
 
 # Load your datasets
+climate<-read.csv("./Data/Processed/BlueMesaClimate.csv")
+power<-read.csv("./Data/Processed/BlueMesaPower.csv")
+reservoir<-read.csv("./Data/Processed/BlueMesaReservoir.csv")
 
 ```
 
 
 # Rationale and Research Questions
 
+Weather patterns have a significant impact on business, health, and community well-being. The western United States has been experiencing years of low precipitation and prolonged drought.  Currently, all of Colorado is experience a moderate to extreme drought (Drought.gov).  The National Oceanic and Atmospheric Administration's (NOAA) National Integrated Drought Information System (NIDIS) tracks the impacts of drought, including its effect on crops and livestock and fire.  Across Colorado, the impact of drought is clear in the low levels of reservoirs.  
+
+ 
 
 
 \newpage
@@ -47,7 +77,116 @@ mainfont: Times New Roman
 
 # Exploratory Analysis 
 
+```{r summary stats, echo=FALSE}
+#read in data
+all.data<-read.csv("../Data/Processed/AllData.csv")
+all.data$Date<-as.Date(all.data$Date, format = "%Y-%d-%m")
+all.data<-all.data %>%
+  na.omit()
+all.data.nodate<-select(all.data, -c(X, Date))
 
+#adjust data to remove Spillway and rename columns
+all.data.nospill <-
+  select(all.data.nodate, -c(Spillway.cfs)) %>%
+  rename("Max Temperature" = MaxT,
+         "Min Temperature" = MinT,
+         "Precipitation" = Precip,
+         "Snowfall" = Snow,
+         "Electricity Generation.MWh" = MWH)
+
+#summary statistics table data
+summary.table<-all.data.nospill %>%
+  summary()
+summary.table<-as.data.frame(summary.table) %>% cSplit("Freq", sep = ":", type.convert = FALSE) 
+summary.table<-summary.table %>%
+  select(Var2, Freq_1, Freq_2)
+summary.table<-pivot_wider(summary.table, names_from = Freq_1, values_from = Freq_2)
+summary.table<-select(summary.table, c(Var2, Mean, Min., Max.))
+
+sd<-colSds(as.matrix(all.data.nospill[sapply(all.data.nospill, is.numeric)]))
+sd<-as.data.frame(sd)
+summary.table<-cbind(summary.table, sd)
+
+names(summary.table)[names(summary.table)=='Var2']<-'Variable'
+
+#change data to numeric
+summary.table$Mean <- as.numeric(summary.table$Mean)
+summary.table$Max. <- as.numeric(summary.table$Max.)
+summary.table$Min. <- as.numeric(summary.table$Min.)
+summary.table$sd <- as.numeric(summary.table$sd)
+
+#create gt table
+gt(summary.table) %>%
+    tab_header(title = "Blue Mesa Reservoir Summary Statistics") %>%
+    fmt_number(
+      columns = c(Mean, Min., Max., sd), decimals = 2)
+
+```
+
+
+```{r wrangle the data, include = FALSE}
+#getting dates in the proper format 
+climate$Date <-as.Date(climate$Date, format = "%Y-%m-%d")
+
+power$Date <- as.Date(power$Date, format = "%Y-%m-%d")
+
+reservoir$Date <- as.Date(reservoir$Date, format = "%d-%b-%y")
+
+#make a gathered data set for data viz
+climate.longer<-pivot_longer(climate, MaxT:MinT, names_to = "Min/Max", values_to = "Temperature")
+
+#make a gathered data set for data viz
+reservoir.longer<-reservoir %>%
+  pivot_longer(Inflow.cfs:Total.cfs, names_to = "Flow_Type", values_to = "Flow_(cfs)") %>%
+  pivot_longer(Storage.af:Evaporation.af, names_to = "Volume_Type", values_to = "Volume_(af)")
+
+#combine power and reservoir data
+all.data<-left_join(reservoir, climate)
+all.data<-left_join(all.data, power)
+#write.csv(all.data, "AllData.csv") #commenting out b/c already written
+```
+
+
+```{r visual exploration}
+#min and max temperature over time
+ggplot(climate.longer) +
+  geom_point(aes(x = Date, y = Temperature, group = `Min/Max`, color = `Min/Max`)) +
+  labs(y="Temperature (F)", color = "Legend")+
+  scale_color_manual(labels=c("Maximum", "Minimum"), values=c("red", "blue"))
+
+#power production over time
+ggplot(power, aes(x=Date, y=MWH))+
+  geom_line()+
+  ylab("Electricity Generation (MWh)")
+
+#reservoir elevation over time
+ggplot(reservoir, aes(x=Date, y = Elevation.ft))+
+  geom_line(color = "blue")+
+  ylab("Reservoir Elevation (ft)")
+
+#reservoir volume over time
+ggplot(reservoir.longer, aes(x=Date, y = `Volume_(af)`, color = `Volume_Type`))+
+  geom_line()+
+  scale_y_continuous(labels = scales::comma)+
+  labs(y = "Volume (af)", color = "Legend")+
+  scale_color_manual(labels=c("Evaporation", "Storage"), values=c("orange", "blue"))
+
+#reservoir total flow over time
+ggplot(reservoir, aes(x=Date, y = Total.cfs))+
+  geom_line(color = "blue")+
+  labs(y = "Total Flow (cfs)")
+
+#reservoir power production by power.cfs
+#I want to do a second axis here but it isn't working. Would also need to add a legend.  SK: I made the second axis appear but it's not adjusting to the right scale.
+ggplot(all.data, aes(x=Date))+
+  geom_line(aes(y=MWH), color = "red")+
+  geom_line(aes(y=Power.cfs), color = "blue")+
+  #scale_color_manual(name = "Legend", labels = c("Power Flow (cfs)", "Electricity Generation (MWh)"), values = c("blue", "red"))+
+  scale_y_continuous(
+    name = "Electricity Generation (MWh)",
+    sec.axis = sec_axis(~./100, name ="Power Flow (cfs)"))
+  
+```
 
 \newpage
 
