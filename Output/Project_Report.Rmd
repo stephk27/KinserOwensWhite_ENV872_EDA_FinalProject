@@ -62,15 +62,26 @@ reservoir<-read.csv("./Data/Processed/BlueMesaReservoir.csv")
 
 # Rationale and Research Questions
 
-Weather patterns have a significant impact on business, health, and community well-being. The western United States has been experiencing years of low precipitation and prolonged drought.  Currently, all of Colorado is experience a moderate to extreme drought (Drought.gov).  The National Oceanic and Atmospheric Administration's (NOAA) National Integrated Drought Information System (NIDIS) tracks the impacts of drought, including its effect on crops and livestock and fire.  Across Colorado, the impact of drought is clear in the low levels of reservoirs.  
+Weather patterns have a significant impact on business, health, and community well-being. The western United States has been experiencing years of low precipitation and prolonged drought.  Currently, all of Colorado is experiencing a moderate to extreme drought (Drought.gov).  The National Oceanic and Atmospheric Administration's (NOAA) National Integrated Drought Information System (NIDIS) tracks the impacts of drought, including its effect on crops and livestock and fire.  We want to explore the effects of weather patterns on hydroelectric power production, an impact that is not currently captured by NIDIS.
 
- 
+Hydroelectric power plants rely on a sufficient reservoir level to maintain power output, which can be an important source of carbon-free electricity.  We wonder how weather patterns and reservoir management have impacted hydroelectric power production.  We identified Blue Mesa Reservoir and Hydroelectric Power Plant in Colorado to explore our research questions.
+
+Blue Mesa Power Plant has a nameplate capacity of 86.2 MW and began generating power in 1967.  It is located on the Gunnison River in Colorado.
+
+Research Questions: #need to figure out how to underline & bullet
+Which weather and reservoir management variables influence Blue Mesa's power production?
+How do weather patterns affect electricity generation?
+How do reservoir inflow and outflow affect electricity generation?
+How has electricity generation of Blue Mesa Power Plant changed over time?
 
 
 \newpage
 
 # Dataset Information
 
+For our analysis, we relied on two data sets.  For Blue Mesa's power production and reservoir management, we sourced data from the Colorado Bureau of Reclamation.  The power production dataset includes monthly electricity generation reported in MWh.  The reservoir management dataset includes eight variables, including elevation, storage, inflow, and outflow.  We pulled monthly averages for this data from 2003 to 2021 when all the data was available.
+
+We sourced weather data from the Colorado Climate Center, an institute at Colorado State University.  We pulled monthly data for Blue Mesa on the maximum temperature, minimum temperature, average precipitation, and average snowfall.
 
 
 \newpage
