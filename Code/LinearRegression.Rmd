@@ -19,7 +19,7 @@ library(dplyr)
 
 ```{r load the data}
 getwd()
-all.data<-read.csv("../Data/Processed/AllData.csv")
+all.data<-read.csv("./Data/Processed/AllData.csv")
 all.data$Date<-as.Date(all.data$Date, format = "%Y-%d-%m")
 all.data<-all.data %>%
   na.omit()
@@ -67,7 +67,7 @@ all.data.nospill <-
 
 summary.table<-all.data.nospill %>%
   summary()
-summary.table<-as.data.frame(summary.table) %>% cSplit("Freq", sep = ":", type.convert = FALSE) 
+summary.table<-as.data.frame(summary.table) %>% cSplit("Freq", sep = ":", type.convert = FALSE)
 summary.table<-summary.table %>%
   select(Var2, Freq_1, Freq_2)
 summary.table<-pivot_wider(summary.table, names_from = Freq_1, values_from = Freq_2)

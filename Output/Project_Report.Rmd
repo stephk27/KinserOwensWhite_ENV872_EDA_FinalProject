@@ -32,6 +32,7 @@ library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
+library(gt)
 #install.packages("tidyr")
 library(tidyr)
 #install.packages("zoo")
@@ -44,6 +45,12 @@ library(corrplot)
 library(splitstackshape)
 #install.packages("matrixStats")
 library(matrixStats)
+#install.packages("gtsummary")
+library(gtsummary)
+#install.packages("knitr")
+require(knitr)
+#install.packages("kfigr")
+require(kfigr)
 
 # Set your ggplot theme
 mytheme <- theme_classic(base_size = 14) +
@@ -62,17 +69,15 @@ reservoir<-read.csv("./Data/Processed/BlueMesaReservoir.csv")
 
 # Rationale and Research Questions
 
-Weather patterns have a significant impact on business, health, and community well-being. The western United States has been experiencing years of low precipitation and prolonged drought.  Currently, all of Colorado is experiencing a moderate to extreme drought (Drought.gov).  The National Oceanic and Atmospheric Administration's (NOAA) National Integrated Drought Information System (NIDIS) tracks the impacts of drought, including its effect on crops and livestock and fire.  We want to explore the effects of weather patterns on hydroelectric power production, an impact that is not currently captured by NIDIS.
+Climate patterns have a significant impact on business, health, and community well-being. The western United States has been experiencing years of low precipitation and prolonged drought.  Currently, all of Colorado is experiencing a moderate to extreme drought (Drought.gov).  The National Oceanic and Atmospheric Administration's (NOAA) National Integrated Drought Information System (NIDIS) tracks the impacts of drought, including its effect on crops and livestock and fire.  We want to explore the effects of climate patterns on hydroelectric power production, an impact that is not currently captured by NIDIS.
 
-Hydroelectric power plants rely on a sufficient reservoir level to maintain power output, which can be an important source of carbon-free electricity.  We wonder how weather patterns and reservoir management have impacted hydroelectric power production.  We identified Blue Mesa Reservoir and Hydroelectric Power Plant in Colorado to explore our research questions.
+Hydroelectric power plants rely on a sufficient reservoir level to maintain power output, which can be an important source of carbon-free electricity.  We wonder how climate patterns and reservoir management have impacted hydroelectric power production.  We identified Blue Mesa Reservoir and Hydroelectric Power Plant in Colorado to explore our research questions.
 
 Blue Mesa Power Plant has a nameplate capacity of 86.2 MW and began generating power in 1967.  It is located on the Gunnison River in Colorado.
 
-Research Questions: #need to figure out how to underline & bullet
-Which weather and reservoir management variables influence Blue Mesa's power production?
-How do weather patterns affect electricity generation?
-How do reservoir inflow and outflow affect electricity generation?
-How has electricity generation of Blue Mesa Power Plant changed over time?
+Research Questions: 
+* Which climate and reservoir management variables influence Blue Mesa's power production?
+* How has electricity generation of Blue Mesa Power Plant changed over time?
 
 
 \newpage
@@ -81,16 +86,18 @@ How has electricity generation of Blue Mesa Power Plant changed over time?
 
 For our analysis, we relied on two data sets.  For Blue Mesa's power production and reservoir management, we sourced data from the Colorado Bureau of Reclamation.  The power production dataset includes monthly electricity generation reported in MWh.  The reservoir management dataset includes eight variables, including elevation, storage, inflow, and outflow.  We pulled monthly averages for this data from 2003 to 2021 when all the data was available.
 
-We sourced weather data from the Colorado Climate Center, an institute at Colorado State University.  We pulled monthly data for Blue Mesa on the maximum temperature, minimum temperature, average precipitation, and average snowfall.
+We sourced climate data from the Colorado Climate Center, an institute at Colorado State University.  We pulled monthly data for Blue Mesa on the maximum temperature, minimum temperature, average precipitation, and average snowfall.
 
 
 \newpage
 
 # Exploratory Analysis 
 
-```{r summary stats, echo=FALSE}
-#read in data
-all.data<-read.csv("../Data/Processed/AllData.csv")
+Prior to analysis, data were explored in terms of both summary statistics and visual patterns and relationships. Table 1 summarizes the data for all fourteen variables used in building the explanatory model. Summary statistics include mean, minimum value, maximum value, and standard deviation across all observations. From 2003 to 2021, Blue Mesa Reservoir's elevation ranged from 7,438 ft to 7,519 ft. Temperature at the reservoir ranged from -11.80 $^\circ$F to 87.20 $^\circ$F. The Blue Mesa dam produced an average of 18,856 MWh of electricity per month with a range of 2,724 MWh to 54,068 MWh during peak production.
+
+```{r wrangle data part one, include=FALSE}
+#read in all data
+all.data<-read.csv("./Data/Processed/AllData.csv")
 all.data$Date<-as.Date(all.data$Date, format = "%Y-%d-%m")
 all.data<-all.data %>%
   na.omit()
@@ -104,17 +111,19 @@ all.data.nospill <-
          "Precipitation" = Precip,
          "Snowfall" = Snow,
          "Electricity Generation.MWh" = MWH)
+```
 
+```{r build summary statistics table, echo=FALSE}
 #summary statistics table data
-summary.table<-all.data.nospill %>%
+summary.table<-all.data.nodate %>%
   summary()
-summary.table<-as.data.frame(summary.table) %>% cSplit("Freq", sep = ":", type.convert = FALSE) 
+summary.table<-as.data.frame(summary.table) %>% cSplit("Freq", sep = ":", type.convert = FALSE)
 summary.table<-summary.table %>%
-  select(Var2, Freq_1, Freq_2)
+   select(Var2, Freq_1, Freq_2)
 summary.table<-pivot_wider(summary.table, names_from = Freq_1, values_from = Freq_2)
 summary.table<-select(summary.table, c(Var2, Mean, Min., Max.))
-
-sd<-colSds(as.matrix(all.data.nospill[sapply(all.data.nospill, is.numeric)]))
+ 
+sd<-colSds(as.matrix(all.data.nodate[sapply(all.data.nodate, is.numeric)]))
 sd<-as.data.frame(sd)
 summary.table<-cbind(summary.table, sd)
 
@@ -125,17 +134,16 @@ summary.table$Mean <- as.numeric(summary.table$Mean)
 summary.table$Max. <- as.numeric(summary.table$Max.)
 summary.table$Min. <- as.numeric(summary.table$Min.)
 summary.table$sd <- as.numeric(summary.table$sd)
-
-#create gt table
-gt(summary.table) %>%
-    tab_header(title = "Blue Mesa Reservoir Summary Statistics") %>%
-    fmt_number(
-      columns = c(Mean, Min., Max., sd), decimals = 2)
-
 ```
 
+```{r summary statistics table, echo=FALSE}
+#create gt table
+gt(summary.table) %>%
+    fmt_number(
+      columns = c(Mean, Min., Max., sd), decimals = 2)
+```
 
-```{r wrangle the data, include = FALSE}
+```{r wrangle the data part two, include = FALSE}
 #getting dates in the proper format 
 climate$Date <-as.Date(climate$Date, format = "%Y-%m-%d")
 
@@ -150,64 +158,129 @@ climate.longer<-pivot_longer(climate, MaxT:MinT, names_to = "Min/Max", values_to
 reservoir.longer<-reservoir %>%
   pivot_longer(Inflow.cfs:Total.cfs, names_to = "Flow_Type", values_to = "Flow_(cfs)") %>%
   pivot_longer(Storage.af:Evaporation.af, names_to = "Volume_Type", values_to = "Volume_(af)")
-
-#combine power and reservoir data
-all.data<-left_join(reservoir, climate)
-all.data<-left_join(all.data, power)
-#write.csv(all.data, "AllData.csv") #commenting out b/c already written
 ```
 
+To further explore the data, a series of graphs were developed to visually examine trends in key variables over time and well as variables with expected trends in relation to each other. In `r figr('min/max', TRUE, type = "figure")`, both minimum and maximum temperatures are shown from 2003 until 2021 at Blue Mesa Reservoir. To examine trends in electricity generation over time, `r figr('power production', TRUE, type = "figure")` plots MWh production by date (month). In the next plot, `r figr('elevation', TRUE, type = "figure")`, reservoir elevation (ft) is graphed over time followed by `r figr('volume', TRUE, type = "figure")` showing volume in acre-feet over time. Total inflow over time is then shown in `r figr('total inflow', TRUE, type = "figure")`.
 
-```{r visual exploration}
+```{r min/max, echo=FALSE, fig.align="center", anchor="figure", warning = FALSE, fig.cap= "Minimum and maximum temperature at Blue Mesa Reservoir in Fahrenheit from January 2003 until December 2021.", fig.height=3, fig.width=5}
 #min and max temperature over time
 ggplot(climate.longer) +
   geom_point(aes(x = Date, y = Temperature, group = `Min/Max`, color = `Min/Max`)) +
   labs(y="Temperature (F)", color = "Legend")+
   scale_color_manual(labels=c("Maximum", "Minimum"), values=c("red", "blue"))
+```
 
+```{r power production, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Power production in megawatt hours at Blue Mesa Reservoir from June 2003 until March 2021.", fig.height=3, fig.width=5}
 #power production over time
 ggplot(power, aes(x=Date, y=MWH))+
   geom_line()+
-  ylab("Electricity Generation (MWh)")
+  labs(y="Electricity Generation (MWh)")+
+  theme(plot.caption = element_text(hjust = .25))
+```
 
+```{r elevation, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Reservoir elevation in feet at Blue Mesa Reservoir from January 2003 until December 2021.", fig.height=3, fig.width=5}
 #reservoir elevation over time
 ggplot(reservoir, aes(x=Date, y = Elevation.ft))+
   geom_line(color = "blue")+
-  ylab("Reservoir Elevation (ft)")
+  labs(y = "Reservoir Elevation (ft)")
+```
 
+```{r volume, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Reservoir volume in acre-feet at Blue Mesa Reservoir from January 2003 until December 2021.", fig.height=3, fig.width=5}
 #reservoir volume over time
 ggplot(reservoir.longer, aes(x=Date, y = `Volume_(af)`, color = `Volume_Type`))+
   geom_line()+
   scale_y_continuous(labels = scales::comma)+
   labs(y = "Volume (af)", color = "Legend")+
   scale_color_manual(labels=c("Evaporation", "Storage"), values=c("orange", "blue"))
+```
 
+```{r total flow, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Total flow into Blue Mesa Reservoir in cubic feet per second from January 2003 until December 2021.", fig.height=3, fig.width=5}
 #reservoir total flow over time
 ggplot(reservoir, aes(x=Date, y = Total.cfs))+
   geom_line(color = "blue")+
-  labs(y = "Total Flow (cfs)")
+  labs(y = "Total Inflow (cfs)")
+```
 
-#reservoir power production by power.cfs
-#I want to do a second axis here but it isn't working. Would also need to add a legend.  SK: I made the second axis appear but it's not adjusting to the right scale.
-ggplot(all.data, aes(x=Date))+
-  geom_line(aes(y=MWH), color = "red")+
-  geom_line(aes(y=Power.cfs), color = "blue")+
-  #scale_color_manual(name = "Legend", labels = c("Power Flow (cfs)", "Electricity Generation (MWh)"), values = c("blue", "red"))+
-  scale_y_continuous(
-    name = "Electricity Generation (MWh)",
-    sec.axis = sec_axis(~./100, name ="Power Flow (cfs)"))
-  
+From there, a few variables are explored graphically with respect to the dependent variable (MWh). In `r figr('MWHxTotal', TRUE, type = "figure")`, total inflow (cfs) is plotted against electricity generation and shows a positive relationship. As inflow increases, electricity generation increases as well. 
+
+```{r MWHxTotal, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Relationship between total water inflow (cfs) and power production (MWH) at Blue Mesa Reservoir from 2003 until 2021.", fig.height=3, fig.width=5}
+#MWH by total inflow
+ggplot(all.data, aes(x=Total.cfs, y = MWH))+
+  geom_line()+
+  labs(x = "Total Inflow (cfs)", y = "Electricity Generation (MWh)") 
+```
+
+Power outflow is then plotted against electricity generation in `r figr('MWHxPower', TRUE, type = "figure")`, also showing a positive relationship. These trends were expected based on the high correlation between total inflow and MWh and power outflow and MWh as shown in `r figr('correlation', TRUE, type = "figure")`. However, the relationships between these variables are explored further in the analysis for significance.
+
+```{r MWHxPower, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Relationship between power outflow (cfs) and power production (MWH) at Blue Mesa Reservoir from 2003 until 2021.", fig.height=3, fig.width=5}
+#MWH by power flow
+ggplot(all.data, aes(x=Power.cfs, y = MWH))+
+  geom_line()+
+  labs(x = "Power Outflow (cfs)", y = "Electricity Generation (MWh)")   
+```
+
+Last, `r figr('MWHxPrecip', TRUE, type = "figure")` shows precipitation (inches) plotted against electricity generation. No noticeable trend is observed but the contribution from precipitation in explaining variation in electricity generation is explored further in the analysis.
+
+```{r MWHxPrecip, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Relationship between precipitation (inches) and power production (MWH) at Blue Mesa Reservoir from 2003 until 2021.", fig.height=3, fig.width=5}
+#MWH by precipitation
+ggplot(all.data, aes(x=Precip, y = MWH))+
+  geom_line()+
+  labs(x = "Precipitation (in)", y = "Electricity Generation (MWh)") 
 ```
 
 \newpage
 
 # Analysis
 
+The analysis was divided into two components: a linear regression to explore the influene of other variables on electricity generation, and a time series analysis to explore how electricity generation has changed over time.
 
+## Question 1: Which climate and reservoir management variables influence Blue Mesa's power production?
 
-## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
+The first step in the analysis was to explore the correlation between different varaibles used in the model. In (`r figr('correlation', TRUE, type = "figure")`), narrow ovals or straight lines indicate two variables that are highly correlated. The wider the oval, the less correlated the variables are. This correlation matrix provides an understanding of how variables relate to one another and is useful when interpretting results.
 
-## Question 2: 
+```{r correlation, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Correlation matrix for all dependent and independent variables used in building the explanatory model.", fig.height=4, fig.width=6}
+all.data.corr<-cor(all.data.nodate)
+corrplot(all.data.corr, method = "ellipse")
+```
+
+A multiple linear regression was then performed to explore the contribution of the thirteen independent variables in explaining variation in the dependent variable, megawatt hours (MWh). After the initial regression, an AIC test was run to identify which combination of variables contributed to the model of best fit for explaining MWh. Eight independent variables were selected for the final model and their coefficients (Beta) and significance values are summarized in Table 2. 
+
+```{r Multiple Linear Regression Analysis, include=FALSE}
+#Run a regression with all variables to take a first look
+regression.all<-lm(data = all.data, MWH ~ Elevation.ft + Storage.af + Evaporation.af + Inflow.cfs + UnregInflow.cfs + Bypass.cfs + Spillway.cfs +  MaxT + MinT + Precip + Snow + Total.cfs + Power.cfs)
+
+summary(regression.all)
+
+# #Run a stepwise AIC test to find the model of best fit from all the above variables
+step(regression.all)
+
+#Choose the model of best fit from the AIC test and run below
+regression.final <- lm(data = all.data, MWH ~ Elevation.ft + Storage.af + Evaporation.af +
+     Inflow.cfs + MaxT + Precip + Total.cfs + Power.cfs)
+
+summary(regression.final)
+
+r.squared<-summary(regression.final)$adj.r.squared
+r.squared<-round(r.squared, digits = 3)
+
+#write.csv(as.data.frame(summary(regression.final)$coef), file = "./Output/RegressionTable.csv")
+```
+
+```{r Regression Table, echo=FALSE}
+fit_stats <-
+  broom::glance(regression.final) %>%
+  select(`Adjusted R squared` = r.squared, AIC) %>%
+  mutate_all(function(x) style_sigfig(x, digits = 3)) %>%
+  {paste(names(.), ., sep = " = ", collapse = "; ")}
+
+tbl_regression(regression.final) %>%
+  as_gt() %>%
+  gt::tab_source_note((gt::html(fit_stats)))
+```
+
+The final regression identifies elevation, storage, evaporation, inflow, maximum temperature, precipitation, total inflow, and power outflow as all contributing to explaining variation in electricity generation (MWh) across the study period. The model has an adjusted R^2 of `r r.squared`, indicating the model explains 99.5% of the variation in MWh. According to the model results, a decrease in elevation of 249 ft per month leads to an increase of one MWh of electricity generation. This result is expected considering that as water is drawn down through the hydroelectric turbines for electricity generation, the reservoir's elevation decreases. Likewise, as power outflow increases 17 cfs, electricity generation increases by one MWh per month. This result also agrees with our expected findings since power outflow and MWh are highly correlated and since power outflow is released with the intention of generating electricity.
+
+## Question 2: How has electricity generation of Blue Mesa Power Plant changed over time?
 
 
 
