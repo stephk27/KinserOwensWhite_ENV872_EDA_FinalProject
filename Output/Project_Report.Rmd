@@ -48,6 +48,7 @@ library(matrixStats)
 #install.packages("gtsummary")
 library(gtsummary)
 #install.packages("knitr")
+library(knitr)
 require(knitr)
 #install.packages("kfigr")
 require(kfigr)
@@ -69,24 +70,24 @@ reservoir<-read.csv("../Data/Processed/BlueMesaReservoir.csv")
 
 # Rationale and Research Questions
 
-Climate patterns have a significant impact on business, health, and community well-being. The western United States has been experiencing years of low precipitation and prolonged drought.  Currently, all of Colorado is experiencing a moderate to extreme drought (Drought.gov).  The National Oceanic and Atmospheric Administration's (NOAA) National Integrated Drought Information System (NIDIS) tracks the impacts of drought, including its effect on crops and livestock and fire.  We want to explore the effects of climate patterns on hydroelectric power production, an impact that is not currently captured by NIDIS.
-\
-Hydroelectric power plants rely on a sufficient reservoir level to maintain power output, which can be an important source of carbon-free electricity.  We wonder how climate patterns and reservoir management have impacted hydroelectric power production.  We identified Blue Mesa Reservoir and Hydroelectric Power Plant in Colorado to explore our research questions.
-\
-Blue Mesa Power Plant has a nameplate capacity of 86.2 MW and began generating power in 1967.  It is located on the Gunnison River in Colorado and it is managed by the Colorado Bureau of Reclamation.  The reservoir also provides long-term storage to ensure that Colorado is able to meet its downstream flow obligation as established in the Colorado River Compact (CO Bureau of Reclamation).
-\
-**Research Questions:** \
+Climate patterns have a significant impact on business, health, and community well-being. The western United States has been experiencing years of low precipitation and prolonged drought.  Currently, all of Colorado is experiencing a moderate to extreme drought (Current U.S. Drought Monitor Conditions for Colorado).  The National Oceanic and Atmospheric Administration's (NOAA) National Integrated Drought Information System (NIDIS) tracks the impacts of drought, including its effect on crops and livestock and fire.  We want to explore the effects of climate patterns on hydroelectric power production, an impact that is not currently captured by NIDIS.
 
--Which climate and reservoir management variables influence Blue Mesa's power production?
--How has electricity generation of Blue Mesa Power Plant changed over time?
+Hydroelectric power plants rely on a sufficient reservoir level to maintain power output, which can be an important source of carbon-free electricity.  We wonder how climate patterns and reservoir management have impacted hydroelectric power production.  We identified Blue Mesa Reservoir and Hydroelectric Power Plant in Colorado to explore our research questions.
+
+Blue Mesa Power Plant has a nameplate capacity of 86.2 MW and began generating power in 1967.  It is located on the Gunnison River in Colorado and it is managed by the Colorado Bureau of Reclamation.  The reservoir also provides long-term storage to ensure that Colorado is able to meet its downstream flow obligation as established in the Colorado River Compact (Blue Mesa Powerplant).\
+
+**Research Questions:**
+
+* Which climate and reservoir management variables influence Blue Mesa's power production?\
+* How has electricity generation of Blue Mesa Power Plant changed over time?
 
 
 \newpage
 
 # Dataset Information
 
-For our analysis, we relied on two data sets.  For Blue Mesa's power production and reservoir management, we sourced data from the Colorado Bureau of Reclamation.  The power production dataset includes monthly electricity generation reported in MWh.  The reservoir management dataset includes eight variables, including elevation, storage, inflow, and outflow.  We pulled monthly averages for this data from 2003 to 2021 when all the data was available.
-\
+For our analysis, we relied on two data sets.  For Blue Mesa's power production and reservoir management, we sourced data from the U.S. Bureau of Reclamation.  The power production dataset includes monthly electricity generation reported in MWh.  The reservoir management dataset includes eight variables, including elevation, storage, inflow, and outflow.  We pulled monthly averages for this data from 2003 to 2021 when all the data was available.
+
 We sourced climate data from the Colorado Climate Center, an institute at Colorado State University.  We pulled monthly data for Blue Mesa on the maximum temperature, minimum temperature, average precipitation, and average snowfall.
 
 
@@ -111,7 +112,7 @@ all.data.nodate<-select(all.data, -c(X, Date))%>%
 
 ```
 
-Prior to analysis, data were explored in terms of both summary statistics and visual patterns and relationships. Table \ref{table: summary_statistics} summarizes the data for all fourteen variables used in building the explanatory model. Summary statistics include mean, minimum value, maximum value, and standard deviation across all observations. From 2003 to 2021, Blue Mesa Reservoir's elevation ranged from `r round(min(all.data$Elevation.ft), 0)` ft to `r round(max(all.data$Elevation.ft), 0)`. Temperature at the reservoir ranged from -`r round(min(all.data$MinT), 1)` $^\circ$F to `r round(max(all.data$MaxT), 1)` $^\circ$F. The Blue Mesa dam produced an average of `r round(mean(all.data$MWH), 0)` MWh of electricity per month with a range of `r round(min(all.data$MWH), 0)` MWh to `r round(max(all.data$MWH), 0)` MWh during peak production.
+Prior to analysis, data were explored in terms of both summary statistics and visual patterns and relationships. Table \ref{table: tab1} summarizes the data for all fourteen variables used in building the explanatory model. Summary statistics include mean, minimum value, maximum value, and standard deviation across all observations. From 2003 to 2021, Blue Mesa Reservoir's elevation ranged from `r round(min(all.data$Elevation.ft), 0)` ft to `r round(max(all.data$Elevation.ft), 0)`. Temperature at the reservoir ranged from -`r round(min(all.data$MinT), 1)`$^\circ$F to `r round(max(all.data$MaxT), 1)`$^\circ$F. The Blue Mesa dam produced an average of `r round(mean(all.data$MWH), 0)` MWh of electricity per month with a range of `r round(min(all.data$MWH), 0)` MWh to `r round(max(all.data$MWH), 0)` MWh during peak production.
 
 ```{r build summary statistics table inputs, echo=FALSE}
 
@@ -135,6 +136,13 @@ summary.table$Mean <- as.numeric(summary.table$Mean)
 summary.table$Max. <- as.numeric(summary.table$Max.)
 summary.table$Min. <- as.numeric(summary.table$Min.)
 summary.table$sd <- as.numeric(summary.table$sd)
+```
+
+```{r tab1, include=FALSE}
+#create kable table
+summary_table <- kable(summary.table, caption = "Blue Mesa Reservoir Summary Statistics", col.names = c("Variable", "Mean", "Minimum", "Maximum", "Standard Deviation"), "pipe")
+summary_table
+
 ```
 
 ```{r summary_statistics, echo=FALSE}
@@ -236,6 +244,7 @@ ggplot(all.data, aes(x=Precip, y = MWH))+
 
 
 \newpage
+\newpage
 
 # Analysis
 
@@ -250,7 +259,7 @@ all.data.corr<-cor(all.data.nodate)
 corrplot(all.data.corr, method = "ellipse")
 ```
 
-A multiple linear regression was then performed to explore the contribution of the thirteen independent variables in explaining variation in the dependent variable, electricity generation (MWh). After the initial regression, an AIC test was run to identify which combination of variables contributed to the model of best fit for explaining electricity generation (MWh). Eight independent variables were selected for the final model and their coefficients (Beta) and significance values are summarized in Table \r{tab:Regression_Table}. 
+A multiple linear regression was then performed to explore the contribution of the thirteen independent variables in explaining variation in the dependent variable, electricity generation (MWh). After the initial regression, an AIC test was run to identify which combination of variables contributed to the model of best fit for explaining electricity generation (MWh). Eight independent variables were selected for the final model and their coefficients (Beta) and significance values are summarized in Table 2. 
 
 ```{r Multiple Linear Regression Analysis, include=FALSE}
 #Run a regression with all variables to take a first look
@@ -301,4 +310,8 @@ The final regression identifies elevation, storage, evaporation, inflow, maximum
 \newpage
 
 # References
-<add references here if relevant, otherwise delete this section> 
+Blue Mesa Powerplant. (n.d.). Bureau of Reclamation. Retrieved April 16, 2022, from https://www.usbr.gov/projects/index.php?id=529
+
+Current U.S. Drought Monitor Conditions for Colorado. (2022, April 16). Drought.Gov. https://www.drought.gov/states/colorado
+
+
