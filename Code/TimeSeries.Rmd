@@ -37,6 +37,55 @@ power<-read.csv("../Data/Processed/BlueMesaPower.csv")
 reservoir<-read.csv("../Data/Processed/BlueMesaReservoir.csv")
 ```
 
+```{r wrangle the data}
+#getting dates in the proper format 
+climate$Date <-as.Date(climate$Date, format = "%Y-%m-%d")
+# climate <-climate %>%
+#   mutate(Year = year(Date)) %>%
+#   mutate(Month = rep(1:12, 19)) %>%
+#   select(-c(Date))
+# climate$Date<-sprintf("%d-%02d", climate$Year, climate$Month)
+# climate<-climate %>%
+#   select(-c(Year, Month))
+
+# power<-power %>%
+#   rename(Date = ï..Date)%>%
+#   subset(select = c(Date, MWH))
+
+power$Date <- as.Date(power$Date, format = "%Y-%m-%d")
+# power<-power %>%
+#   mutate(Month = month(Date)) %>%
+#   mutate(Year = year(Date))%>%
+#   select(-c(Date))
+# power$Date<-sprintf("%d-%02d", power$Year, power$Month)
+# power<- power %>%
+#   select(-c(Year, Month))
+
+# col_order<-c("Date", "MWH")
+# power<-power[, col_order]
+
+reservoir$Date <- as.Date(reservoir$Date, format = "%d-%b-%y")
+# reservoir<-reservoir %>%
+#   mutate(Month = month(Date)) %>%
+#   mutate(Year = year(Date))%>%
+#   select(-c(Date))
+# reservoir$Date<-sprintf("%d-%02d", reservoir$Year, reservoir$Month)
+# reservoir<-reservoir %>%
+#   select(-c(Year, Month))
+
+#make a gathered data set for data viz
+climate.longer<-pivot_longer(climate, MaxT:MinT, names_to = "Min/Max", values_to = "Temperature")
+
+#make a gathered data set for data viz
+reservoir.longer<-reservoir %>%
+  pivot_longer(Inflow.cfs:Total.cfs, names_to = "Flow_Type", values_to = "Flow_(cfs)") %>%
+  pivot_longer(Storage.af:Evaporation.af, names_to = "Volume_Type", values_to = "Volume_(af)")
+
+#combine power and reservoir data
+all.data<-left_join(reservoir, climate)
+all.data<-left_join(all.data, power)
+write.csv(all.data, "AllData.csv")
+```
 
 ## Time Series
 ### Research Question: Has electricity generation (MWh) output of reservoir changed over time?
@@ -104,7 +153,7 @@ print(ts.mhw.plot)
 
 ### Cleaning Data
 
-```{r ts monthly data '04-'20}
+```{r ts monthly data 2004 to 2020}
 summary(All_months.data) #63 NAs are present, need to be removed
 
 # To show I tried the conventional NA removal way we learned in class
