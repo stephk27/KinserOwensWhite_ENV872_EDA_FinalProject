@@ -112,7 +112,7 @@ all.data.nodate<-select(all.data, -c(X, Date))%>%
 
 ```
 
-Prior to analysis, data were explored in terms of both summary statistics and visual patterns and relationships. Table \ref{table: tab1} summarizes the data for all fourteen variables used in building the explanatory model. Summary statistics include mean, minimum value, maximum value, and standard deviation across all observations. From 2003 to 2021, Blue Mesa Reservoir's elevation ranged from `r round(min(all.data$Elevation.ft), 0)` ft to `r round(max(all.data$Elevation.ft), 0)`. Temperature at the reservoir ranged from -`r round(min(all.data$MinT), 1)`$^\circ$F to `r round(max(all.data$MaxT), 1)`$^\circ$F. The Blue Mesa dam produced an average of `r round(mean(all.data$MWH), 0)` MWh of electricity per month with a range of `r round(min(all.data$MWH), 0)` MWh to `r round(max(all.data$MWH), 0)` MWh during peak production.
+Prior to analysis, data were explored in terms of both summary statistics and visual patterns and relationships. Table 1 summarizes the data for all fourteen variables used in building the explanatory model. Summary statistics include mean, minimum value, maximum value, and standard deviation across all observations. From 2003 to 2021, Blue Mesa Reservoir's elevation ranged from `r round(min(all.data$Elevation.ft), 0)` ft to `r round(max(all.data$Elevation.ft), 0)`. Temperature at the reservoir ranged from -`r round(min(all.data$MinT), 1)`$^\circ$F to `r round(max(all.data$MaxT), 1)`$^\circ$F. The Blue Mesa dam produced an average of `r round(mean(all.data$MWH), 0)` MWh of electricity per month with a range of `r round(min(all.data$MWH), 0)` MWh to `r round(max(all.data$MWH), 0)` MWh during peak production.
 
 ```{r build summary statistics table inputs, echo=FALSE}
 
