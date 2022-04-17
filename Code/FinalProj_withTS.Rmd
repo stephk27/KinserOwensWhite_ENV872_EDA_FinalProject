@@ -121,6 +121,137 @@ ggplot(all.data, aes(x=Date))+
 ```
 
 
+####ADD
+
+---
+title: "FinalProject TS DRaft"
+author: "Katherine Owens"
+date: "4/10/2022"
+output: pdf_document
+---
+
+---
+title: "Final Project"
+author: "Cassidy White, Stephanie Kinser, and Katie Owens"
+date: "4/2/2022"
+output: pdf_document
+---
+```{r}
+getwd()
+```
+
+```{r set libraries and theme}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+#install.packages("tidyr")
+library(tidyr)
+#install.packages("dplyr")
+#install.packages("zoo")
+library(zoo)
+
+mytheme <- theme_classic(base_size = 14) +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "right") + 
+  theme_bw()
+theme_set(mytheme)
+```
+
+
+```{r load the data}
+climate<-read.csv("../Project/Processed/BlueMesaClimate.csv")
+power<-read.csv("../Project/Processed/BlueMesaPower.csv")
+reservoir<-read.csv("../Project/Processed/BlueMesaReservoir.csv")
+```
+
+```{r wrangle the data}
+#getting dates in the proper format 
+climate$Date <-as.Date(climate$Date, format = "%Y-%m-%d")
+# climate <-climate %>%
+#   mutate(Year = year(Date)) %>%
+#   mutate(Month = rep(1:12, 19)) %>%
+#   select(-c(Date))
+# climate$Date<-sprintf("%d-%02d", climate$Year, climate$Month)
+# climate<-climate %>%
+#   select(-c(Year, Month))
+
+# power<-power %>%
+#   rename(Date = ï..Date)%>%
+#   subset(select = c(Date, MWH))
+
+power$Date <- as.Date(power$Date, format = "%Y-%m-%d")
+# power<-power %>%
+#   mutate(Month = month(Date)) %>%
+#   mutate(Year = year(Date))%>%
+#   select(-c(Date))
+# power$Date<-sprintf("%d-%02d", power$Year, power$Month)
+# power<- power %>%
+#   select(-c(Year, Month))
+
+# col_order<-c("Date", "MWH")
+# power<-power[, col_order]
+
+reservoir$Date <- as.Date(reservoir$Date, format = "%d-%b-%y")
+# reservoir<-reservoir %>%
+#   mutate(Month = month(Date)) %>%
+#   mutate(Year = year(Date))%>%
+#   select(-c(Date))
+# reservoir$Date<-sprintf("%d-%02d", reservoir$Year, reservoir$Month)
+# reservoir<-reservoir %>%
+#   select(-c(Year, Month))
+
+#make a gathered data set for data viz
+climate.longer<-pivot_longer(climate, MaxT:MinT, names_to = "Min/Max", values_to = "Temperature")
+
+#make a gathered data set for data viz
+reservoir.longer<-reservoir %>%
+  pivot_longer(Inflow.cfs:Total.cfs, names_to = "Flow_Type", values_to = "Flow_(cfs)") %>%
+  pivot_longer(Storage.af:Evaporation.af, names_to = "Volume_Type", values_to = "Volume_(af)")
+
+#combine power and reservoir data
+all.data<-left_join(reservoir, climate)
+all.data<-left_join(all.data, power)
+write.csv(all.data, "AllData.csv")
+```
+
+```{r visual exploration}
+#min and max temperature over time
+ggplot(climate.longer) +
+  geom_point(aes(x = Date, y = Temperature, group = `Min/Max`, color = `Min/Max`)) +
+  labs(y="Temperature (F)", color = "Legend")
+
+#power production over time
+ggplot(power, aes(x=Date, y=MWH))+
+  geom_line()
+
+#reservoir elevation over time
+ggplot(reservoir, aes(x=Date, y = Elevation.ft))+
+  geom_line(color = "blue")+
+  ylab("Reservoir Elevation (ft)")
+
+#reservoir volume over time
+ggplot(reservoir.longer, aes(x=Date, y = `Volume_(af)`, color = `Volume_Type`))+
+  geom_line()+
+  labs(y = "Volume (af)", color = "Legend")
+
+#reservoir total flow over time
+ggplot(reservoir, aes(x=Date, y = Total.cfs))+
+  geom_line(color = "blue")+
+  labs(y = "Total Flow (cfs)")
+
+#reservoir power production by power.cfs
+#I want to do a second axis here but it isn't working. Would also need to add a legend.
+ggplot(all.data, aes(x=Date))+
+  geom_line(aes(y=Power.cfs), color = "blue")+
+  geom_line(aes(y=MWH), color = "red")+
+  scale_y_continuous(
+    name = "Power Flow (cfs)"#,
+    #sec_axis(name = waiver(MWH))
+    )
+```
+
+
 ## Time Series
 ```{r time series}
 #Start of times series section
@@ -231,7 +362,6 @@ ggplot(new.04_20.data) +
   ylab("Linearly Interp. Ozone Concentration (ppm)") 
 # nice try, no need to interpolate anything because data was included complete years between 2004-2020
 ```
-
 ### Analysis
 
 ```{r}
@@ -360,14 +490,10 @@ print(MWH.monthly_SMK2.2_plot)
 
 ```
 
-> Answer: After removing the seasonal component, and running the Mann Kendall test, tau stayed at a value of __, and the p-value again was more than 0.05 giving support for the null hypothesis, and providing support for the alternative hypothesis. This means we do have the presence of a trend still, even without the seasonal component. 
-
->When the SMK.Test was used, the seasonal S-values showed a consistent, positive trend STILL that was moderately pronounced, and an overall increasing trend over time as shown by the positive S-values. The seasonal p-values were also STILL small overall, less than 0.05, demonstrating a non-stationary change in the seasonal trend over time. 
-
->Removing the seasonality component did not seem to change the results in the MannKendall and smk.test tests.
+> Answer: After removing the seasonal component, and running the Mann Kendall test, tau had a value of 0.00212, and the p-value again was more than 0.05 giving support for the null hypothesis, and providing support for the alternative hypothesis. This means even without the seasonal component there is not a significant trend of decreasing or increasing over time in electricity generation (MHW). 
 
 
-## Spatial Analysis
+## Spatial Representation of Blue Mesa Reservoir
 
 ```{r}
 #Import the tidyverse library 
@@ -383,6 +509,49 @@ library(mapview)
 
 #Disable on-the-fly projections
 sf::sf_use_s2(FALSE)
+```
+
+### Creating a spatial dataframe from known coordinates
+
+```{r Create a spatial dataframe from scratch}
+#First create a simple feature geometry object ("sfg")
+sfg_BlueMesaRes <- st_point(c(-107.309647, 38.465418))
+class(sfg_BlueMesaRes)
+mapview(sfg_BlueMesaRes)
+
+#Upgrade to a simple feature geometry column by adding a crs 
+sfc_BlueMesaRes <- st_sfc(sfg_BlueMesaRes,crs=4326)
+class(sfc_BlueMesaRes)
+mapview(sfc_BlueMesaRes)
+
+#Upgrade to a spatial dataframe
+sf_BlueMesaRes <- st_as_sf(sfc_BlueMesaRes)
+sf_BlueMesaRes$Name = 'BlueMesaRes'
+mapview(sf_BlueMesaRes)
+
+```
+
+
+
+```{r meeting notes}
+
+#to-do items:
+#KO do map
+#add metadata sheet after presentation
+#add info / screenshots to slides
+
+#Cassidy needs help figuring out how to place the regression into an output folder alongside other folders
+
+
+#was able to get power plant data for two other plants with same data range, but the reservoir data didn't match up. maybe we can just show analyses on the three power plants production levels and leave the reservoir/climate data for later if needed. 
+
+#used this site: https://www.usbr.gov/rsvrWater/HistoricalApp.html
+#black canyon climate data goes with crystal plant, added to excel
+#need help finding climate data for glen canyon
+
+# slides to include: question, data, wrangle, exploration, analysis, 6
+# mins + 1 minute of Q/A
+
 ```
 
 
