@@ -61,9 +61,9 @@ mytheme <- theme_classic(base_size = 14) +
 theme_set(mytheme)
 
 # Load your datasets
-climate<-read.csv("../Data/Processed/BlueMesaClimate.csv")
-power<-read.csv("../Data/Processed/BlueMesaPower.csv")
-reservoir<-read.csv("../Data/Processed/BlueMesaReservoir.csv")
+climate<-read.csv("./Data/Processed/BlueMesaClimate.csv")
+power<-read.csv("./Data/Processed/BlueMesaPower.csv")
+reservoir<-read.csv("./Data/Processed/BlueMesaReservoir.csv")
 
 ```
 
@@ -99,7 +99,7 @@ We sourced climate data from the Colorado Climate Center, an institute at Colora
 
 ```{r wrangle data part one, include=FALSE}
 #read in all data
-all.data<-read.csv("../Data/Processed/AllData.csv")
+all.data<-read.csv("./Data/Processed/AllData.csv")
 all.data$Date<-as.Date(all.data$Date, format = "%Y-%d-%m")
 all.data<-all.data %>%
   na.omit()
@@ -291,7 +291,7 @@ fit_stats <-
 
 tbl_regression(regression.final) %>%
   as_gt() %>%
-  tab_header(title = "Table 2: Regression Table")%>%
+  tab_header(title = "Table 2: Regression coefficients and significance")%>%
   gt::tab_source_note((gt::html(fit_stats)))
 ```
 

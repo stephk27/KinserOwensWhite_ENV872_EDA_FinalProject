@@ -12,7 +12,7 @@
   \apptocmd{\@title}{\par {\large #1 \par}}{}{}
 }
 \makeatother
-\subtitle{Web address for GitHub repository}
+\subtitle{\url{https://github.com/stephk27/KinserOwensWhite_ENV872_EDA_FinalProject}}
 \author{Stephanie Kinser, Katie Owens, Cassidy White}
 \date{}
 
@@ -98,12 +98,13 @@ Questions}\label{rationale-and-research-questions}}
 Climate patterns have a significant impact on business, health, and
 community well-being. The western United States has been experiencing
 years of low precipitation and prolonged drought. Currently, all of
-Colorado is experiencing a moderate to extreme drought (Drought.gov).
-The National Oceanic and Atmospheric Administration's (NOAA) National
-Integrated Drought Information System (NIDIS) tracks the impacts of
-drought, including its effect on crops and livestock and fire. We want
-to explore the effects of climate patterns on hydroelectric power
-production, an impact that is not currently captured by NIDIS.
+Colorado is experiencing a moderate to extreme drought (Current U.S.
+Drought Monitor Conditions for Colorado). The National Oceanic and
+Atmospheric Administration's (NOAA) National Integrated Drought
+Information System (NIDIS) tracks the impacts of drought, including its
+effect on crops and livestock and fire. We want to explore the effects
+of climate patterns on hydroelectric power production, an impact that is
+not currently captured by NIDIS.
 
 Hydroelectric power plants rely on a sufficient reservoir level to
 maintain power output, which can be an important source of carbon-free
@@ -114,11 +115,22 @@ research questions.
 
 Blue Mesa Power Plant has a nameplate capacity of 86.2 MW and began
 generating power in 1967. It is located on the Gunnison River in
-Colorado.
+Colorado and it is managed by the Colorado Bureau of Reclamation. The
+reservoir also provides long-term storage to ensure that Colorado is
+able to meet its downstream flow obligation as established in the
+Colorado River Compact (Blue Mesa Powerplant).\\
 
-Research Questions: * Which climate and reservoir management variables
-influence Blue Mesa's power production? * How has electricity generation
-of Blue Mesa Power Plant changed over time?
+\textbf{Research Questions:}
+
+\begin{itemize}
+\tightlist
+\item
+  Which climate and reservoir management variables influence Blue Mesa's
+  power production?\\
+\item
+  How has electricity generation of Blue Mesa Power Plant changed over
+  time?
+\end{itemize}
 
 \newpage
 
@@ -126,7 +138,7 @@ of Blue Mesa Power Plant changed over time?
 \section{Dataset Information}\label{dataset-information}}
 
 For our analysis, we relied on two data sets. For Blue Mesa's power
-production and reservoir management, we sourced data from the Colorado
+production and reservoir management, we sourced data from the U.S.
 Bureau of Reclamation. The power production dataset includes monthly
 electricity generation reported in MWh. The reservoir management dataset
 includes eight variables, including elevation, storage, inflow, and
@@ -144,19 +156,24 @@ average snowfall.
 \section{Exploratory Analysis}\label{exploratory-analysis}}
 
 Prior to analysis, data were explored in terms of both summary
-statistics and visual patterns and relationships. Table 1 summarizes the
-data for all fourteen variables used in building the explanatory model.
-Summary statistics include mean, minimum value, maximum value, and
-standard deviation across all observations. From 2003 to 2021, Blue Mesa
-Reservoir's elevation ranged from 7,438 ft to 7,519 ft. Temperature at
-the reservoir ranged from -11.80 \(^\circ\)F to 87.20 \(^\circ\)F. The
-Blue Mesa dam produced an average of 18,856 MWh of electricity per month
-with a range of 2,724 MWh to 54,068 MWh during peak production.
+statistics and visual patterns and relationships. Table
+\ref{table: tab1} summarizes the data for all fourteen variables used in
+building the explanatory model. Summary statistics include mean, minimum
+value, maximum value, and standard deviation across all observations.
+From 2003 to 2021, Blue Mesa Reservoir's elevation ranged from 7438 ft
+to 7519. Temperature at the reservoir ranged from --11.8\(^\circ\)F to
+87.2\(^\circ\)F. The Blue Mesa dam produced an average of
+\ensuremath{1.8856\times 10^{4}} MWh of electricity per month with a
+range of 2724 MWh to \ensuremath{5.4068\times 10^{4}} MWh during peak
+production.
 
 \captionsetup[table]{labelformat=empty,skip=1pt}
 \begin{longtable}{crrrr}
+\caption*{
+{\large Table 1: Blue Mesa Reservoir Summary Statistics}
+} \\ 
 \toprule
-Variable & Mean & Min. & Max. & sd \\ 
+Variable & Mean & Minimum & Maximum & Standard Deviation \\ 
 \midrule
  Elevation.ft & $7,486.00$ & $7,438.00$ & $7,519.00$ & $18.51$ \\ 
   Storage.af & $557,251.00$ & $247,684.00$ & $826,302.00$ & $134,507.54$ \\ 
@@ -167,23 +184,23 @@ UnregInflow.cfs & $1,137.00$ & $195.00$ & $7,915.00$ & $1,366.55$ \\
   Bypass.cfs & $58.88$ & $0.00$ & $2,379.00$ & $252.86$ \\ 
  Spillway.cfs & $-11,550,000.00$ & $-2,147,000,000.00$ & $1,257.00$ & $157,461,141.48$ \\ 
   Total.cfs & $1,146.30$ & $186.00$ & $5,939.00$ & $761.36$ \\ 
-     MaxT & $55.13$ & $13.40$ & $87.20$ & $20.75$ \\ 
-     MinT & $23.63$ & $-11.80$ & $50.80$ & $16.76$ \\ 
-    Precip & $0.73$ & $0.00$ & $4.39$ & $0.61$ \\ 
-     Snow & $3.91$ & $0.00$ & $32.90$ & $5.86$ \\ 
-     MWH & $18,856.00$ & $2,724.00$ & $54,068.00$ & $10,896.96$ \\ 
+Max Temperature & $55.13$ & $13.40$ & $87.20$ & $20.75$ \\ 
+Min Temperature & $23.63$ & $-11.80$ & $50.80$ & $16.76$ \\ 
+Precipitation & $0.73$ & $0.00$ & $4.39$ & $0.61$ \\ 
+   Snowfall & $3.91$ & $0.00$ & $32.90$ & $5.86$ \\ 
+Electricity Generation.MWh & $18,856.00$ & $2,724.00$ & $54,068.00$ & $10,896.96$ \\ 
 \bottomrule
 \end{longtable}
 
 To further explore the data, a series of graphs were developed to
-visually examine trends in key variables over time and well as variables
+visually examine trends in key variables over time as well as variables
 with expected trends in relation to each other. In figure 1, both
 minimum and maximum temperatures are shown from 2003 until 2021 at Blue
 Mesa Reservoir. To examine trends in electricity generation over time,
-figure 2 plots MWh production by date (month). In the next plot, figure
-3, reservoir elevation (ft) is graphed over time followed by figure 4
-showing volume in acre-feet over time. Total inflow over time is then
-shown in figure 5.
+figure 2 plots electricity production (MWh) by date. In the next plot,
+figure 3, reservoir elevation (ft) is graphed over time followed by
+figure 4 showing volume in acre-feet over time. Total inflow over time
+is then shown in figure 5.
 
 \begin{figure}
 
@@ -231,9 +248,10 @@ shown in figure 5.
 \end{figure}
 
 From there, a few variables are explored graphically with respect to the
-dependent variable (MWh). In figure 7, total inflow (cfs) is plotted
-against electricity generation and shows a positive relationship. As
-inflow increases, electricity generation increases as well.
+dependent variable, electricity generation (MWh). In figure 7, total
+inflow (cfs) is plotted against electricity generation and shows a
+positive relationship. As inflow increases, electricity generation
+increases as well.
 
 \begin{figure}
 
@@ -246,9 +264,10 @@ inflow increases, electricity generation increases as well.
 
 Power outflow is then plotted against electricity generation in figure
 8, also showing a positive relationship. These trends were expected
-based on the high correlation between total inflow and MWh and power
-outflow and MWh as shown in figure 9. However, the relationships between
-these variables are explored further in the analysis for significance.
+based on the high correlation between total inflow and electricity
+generation (MWh) and power outflow and electricity generation (MWh) as
+shown in figure 9. However, the relationships between these variables
+are explored further in the analysis for significance.
 
 \begin{figure}
 
@@ -260,8 +279,8 @@ these variables are explored further in the analysis for significance.
 \end{figure}
 
 Last, figure 10 shows precipitation (inches) plotted against electricity
-generation. No noticeable trend is observed but the contribution from
-precipitation in explaining variation in electricity generation is
+generation (MWh). No noticeable trend is observed but the contribution
+from precipitation in explaining variation in electricity generation is
 explored further in the analysis.
 
 \begin{figure}
@@ -274,13 +293,14 @@ explored further in the analysis.
 \end{figure}
 
 \newpage
+\newpage
 
 \hypertarget{analysis}{%
 \section{Analysis}\label{analysis}}
 
 The analysis was divided into two components: a linear regression to
-explore the influene of other variables on electricity generation, and a
-time series analysis to explore how electricity generation has changed
+explore the influence of other variables on electricity generation, and
+a time series analysis to explore how electricity generation has changed
 over time.
 
 \hypertarget{question-1-which-climate-and-reservoir-management-variables-influence-blue-mesas-power-production}{%
@@ -289,11 +309,11 @@ influence Blue Mesa's power
 production?}\label{question-1-which-climate-and-reservoir-management-variables-influence-blue-mesas-power-production}}
 
 The first step in the analysis was to explore the correlation between
-different varaibles used in the model. In (figure 9), narrow ovals or
+different variables used in the model. In (figure 9), narrow ovals or
 straight lines indicate two variables that are highly correlated. The
 wider the oval, the less correlated the variables are. This correlation
 matrix provides an understanding of how variables relate to one another
-and is useful when interpretting results.
+and is useful when interpreting results.
 
 \begin{figure}
 
@@ -306,15 +326,19 @@ and is useful when interpretting results.
 
 A multiple linear regression was then performed to explore the
 contribution of the thirteen independent variables in explaining
-variation in the dependent variable, megawatt hours (MWh). After the
-initial regression, an AIC test was run to identify which combination of
-variables contributed to the model of best fit for explaining MWh. Eight
-independent variables were selected for the final model and their
-coefficients (Beta) and significance values are summarized in Table 2.
+variation in the dependent variable, electricity generation (MWh). After
+the initial regression, an AIC test was run to identify which
+combination of variables contributed to the model of best fit for
+explaining electricity generation (MWh). Eight independent variables
+were selected for the final model and their coefficients (Beta) and
+significance values are summarized in Table 2.
 
 \captionsetup[table]{labelformat=empty,skip=1pt}
 \setlength{\LTpost}{0mm}
 \begin{longtable}{lccc}
+\caption*{
+{\large Table 2: Regression Table}
+} \\ 
 \toprule
 \textbf{Characteristic} & \textbf{Beta} & \textbf{95\% CI}\textsuperscript{1} & \textbf{p-value} \\ 
 \midrule
@@ -339,14 +363,14 @@ all contributing to explaining variation in electricity generation (MWh)
 across the study period. The model has an adjusted R\^{}2 of 0.995,
 indicating the model explains 99.5\% of the variation in MWh. According
 to the model results, a decrease in elevation of 249 ft per month leads
-to an increase of one MWh of electricity generation. This result is
+to an increase of 1 MWh of electricity generation. This result is
 expected considering that as water is drawn down through the
 hydroelectric turbines for electricity generation, the reservoir's
-elevation decreases. Likewise, as power outflow increases 17 cfs,
-electricity generation increases by one MWh per month. This result also
-agrees with our expected findings since power outflow and MWh are highly
-correlated and since power outflow is released with the intention of
-generating electricity.
+elevation decreases. Likewise, as power outflow increases by 17 cfs,
+electricity generation increases by 1 MWh per month. This result also
+agrees with our expected findings since power outflow and electricity
+generation (MWh) are highly correlated and since power outflow is
+released with the intention of generating electricity.
 
 \hypertarget{question-2-how-has-electricity-generation-of-blue-mesa-power-plant-changed-over-time}{%
 \subsection{Question 2: How has electricity generation of Blue Mesa
@@ -363,7 +387,10 @@ time?}\label{question-2-how-has-electricity-generation-of-blue-mesa-power-plant-
 \hypertarget{references}{%
 \section{References}\label{references}}
 
-\textless add references here if relevant, otherwise delete this
-section\textgreater{}
+Blue Mesa Powerplant. (n.d.). Bureau of Reclamation. Retrieved April 16,
+2022, from \url{https://www.usbr.gov/projects/index.php?id=529}
+
+Current U.S. Drought Monitor Conditions for Colorado. (2022, April 16).
+Drought.Gov. \url{https://www.drought.gov/states/colorado}
 
 \end{document}
