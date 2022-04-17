@@ -118,9 +118,9 @@ ggplot(all.data, aes(x=Date))+
 ggplot(all.data, aes(x="El"))    
 ```
 
-###ADD
 
 ## Time Series
+
 ### Research Question: Has electricity generation (MWh) output of reservoir changed over time?
 
 ```{r load packages}
