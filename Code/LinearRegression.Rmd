@@ -2,7 +2,9 @@
 title: "Linear Regression"
 author: "Cassidy White"
 date: "4/6/2022"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r}
@@ -19,7 +21,7 @@ library(dplyr)
 
 ```{r load the data}
 getwd()
-all.data<-read.csv("./Data/Processed/AllData.csv")
+all.data<-read.csv("../Data/Processed/AllData.csv")
 all.data$Date<-as.Date(all.data$Date, format = "%Y-%d-%m")
 all.data<-all.data %>%
   na.omit()
