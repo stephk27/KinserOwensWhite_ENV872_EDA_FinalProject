@@ -104,7 +104,7 @@ We sourced climate data from the Colorado Climate Center, an institute at Colora
 all.data<-read.csv("./Data/Processed/AllData.csv")
 all.data$Date<-as.Date(all.data$Date, format = "%Y-%d-%m")
 all.data<-all.data %>%
-  na.omit() %>%
+  na.omit()
 
 all.data.nodate<-select(all.data, -c(X, Date))%>%
   rename("Max Temperature" = MaxT,
@@ -181,6 +181,7 @@ ggplot(climate.longer) +
   scale_color_manual(labels=c("Maximum", "Minimum"), values=c("red", "blue"))
 ```
 
+
 ```{r power production, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Power production in megawatt hours at Blue Mesa Reservoir from June 2003 until March 2021.", fig.height=3, fig.width=5}
 #power production over time
 ggplot(power, aes(x=Date, y=MWH))+
@@ -189,12 +190,14 @@ ggplot(power, aes(x=Date, y=MWH))+
   theme(plot.caption = element_text(hjust = .25))
 ```
 
+
 ```{r elevation, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Reservoir elevation in feet at Blue Mesa Reservoir from January 2003 until December 2021.", fig.height=3, fig.width=5}
 #reservoir elevation over time
 ggplot(reservoir, aes(x=Date, y = Elevation.ft))+
   geom_line(color = "blue")+
   labs(y = "Reservoir Elevation (ft)")
 ```
+
 
 ```{r volume, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Reservoir volume in acre-feet at Blue Mesa Reservoir from January 2003 until December 2021.", fig.height=3, fig.width=5}
 #reservoir volume over time
@@ -205,6 +208,7 @@ ggplot(reservoir.longer, aes(x=Date, y = `Volume_(af)`, color = `Volume_Type`))+
   scale_color_manual(labels=c("Evaporation", "Storage"), values=c("orange", "blue"))
 ```
 
+
 ```{r total flow, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Total flow into Blue Mesa Reservoir in cubic feet per second from January 2003 until December 2021.", fig.height=3, fig.width=5}
 #reservoir total flow over time
 ggplot(reservoir, aes(x=Date, y = Total.cfs))+
@@ -212,7 +216,7 @@ ggplot(reservoir, aes(x=Date, y = Total.cfs))+
   labs(y = "Total Inflow (cfs)")
 ```
 
-From there, a few variables are explored graphically with respect to the dependent variable, electricity generation (MWh). In `r figr('MWHxTotal', TRUE, type = "figure")`, total inflow (cfs) is plotted against electricity generation and shows a positive relationship. As inflow increases, electricity generation increases as well. 
+From there, a few variables are explored graphically with respect to the dependent variable, electricity generation (MWh). In figure 6, total inflow (cfs) is plotted against electricity generation and shows a positive relationship. As inflow increases, electricity generation increases as well. 
 
 ```{r MWHxTotal, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Relationship between total water inflow (cfs) and power production (MWH) at Blue Mesa Reservoir from 2003 until 2021.", fig.height=3, fig.width=5}
 #MWH by total inflow
@@ -221,7 +225,7 @@ ggplot(all.data, aes(x=Total.cfs, y = MWH))+
   labs(x = "Total Inflow (cfs)", y = "Electricity Generation (MWh)") 
 ```
 
-Power outflow is then plotted against electricity generation in `r figr('MWHxPower', TRUE, type = "figure")`, also showing a positive relationship. These trends were expected based on the high correlation between total inflow and electricity generation (MWh) and power outflow and electricity generation (MWh) as shown in `r figr('correlation', TRUE, type = "figure")`. However, the relationships between these variables are explored further in the analysis for significance.
+Power outflow is then plotted against electricity generation in figure 7, also showing a positive relationship. These trends were expected based on the high correlation between total inflow and electricity generation (MWh) and power outflow and electricity generation (MWh) as shown in figure 9. However, the relationships between these variables are explored further in the analysis for significance.
 
 ```{r MWHxPower, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Relationship between power outflow (cfs) and power production (MWH) at Blue Mesa Reservoir from 2003 until 2021.", fig.height=3, fig.width=5}
 #MWH by power flow
@@ -230,7 +234,7 @@ ggplot(all.data, aes(x=Power.cfs, y = MWH))+
   labs(x = "Power Outflow (cfs)", y = "Electricity Generation (MWh)")   
 ```
 
-Last, `r figr('MWHxPrecip', TRUE, type = "figure")` shows precipitation (inches) plotted against electricity generation (MWh). No noticeable trend is observed but the contribution from precipitation in explaining variation in electricity generation is explored further in the analysis.
+Last, figure 8 shows precipitation (inches) plotted against electricity generation (MWh). No noticeable trend is observed but the contribution from precipitation in explaining variation in electricity generation is explored further in the analysis.
 
 ```{r MWHxPrecip, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Relationship between precipitation (inches) and power production (MWH) at Blue Mesa Reservoir from 2003 until 2021.", fig.height=3, fig.width=5}
 #MWH by precipitation
@@ -249,14 +253,14 @@ The analysis was divided into two components: a linear regression to explore the
 
 ## Question 1: Which climate and reservoir management variables influence Blue Mesa's power production?
 
-The first step in the analysis was to explore the correlation between different variables used in the model. In (`r figr('correlation', TRUE, type = "figure")`), narrow ovals or straight lines indicate two variables that are highly correlated. The wider the oval, the less correlated the variables are. This correlation matrix provides an understanding of how variables relate to one another and is useful when interpreting results.
+The first step in the analysis was to explore the correlation between different variables used in the model. In `r figr('correlation', TRUE, type = "figure")`, narrow ovals or straight lines indicate two variables that are highly correlated. The wider the oval, the less correlated the variables are. This correlation matrix provides an understanding of how variables relate to one another and is useful when interpreting results.
 
 ```{r correlation, echo=FALSE, fig.align="center", anchor="figure", fig.cap = "Correlation matrix for all dependent and independent variables used in building the explanatory model.", fig.height=4, fig.width=6}
 all.data.corr<-cor(all.data.nodate)
 corrplot(all.data.corr, method = "ellipse")
 ```
 
-A multiple linear regression was then performed to explore the contribution of the thirteen independent variables in explaining variation in the dependent variable, electricity generation (MWh). After the initial regression, an AIC test was run to identify which combination of variables contributed to the model of best fit for explaining electricity generation (MWh). Eight independent variables were selected for the final model and their coefficients (Beta) and significance values are summarized in Table 2. 
+A multiple linear regression was then performed to explore the contribution of the thirteen independent variables in explaining variation in the dependent variable, electricity generation (MWh). After the initial regression, an AIC test was run to identify which combination of variables contributed to the model of best fit for explaining electricity generation (MWh). Eight independent variables were selected for the final model and their coefficients (Beta) and significance values are summarized in Table 2.     
 
 ```{r Multiple Linear Regression Analysis, include=FALSE}
 #Run a regression with all variables to take a first look
@@ -489,13 +493,13 @@ After removing the seasonal component and running the Mann Kendall test, tau had
 
 # Summary and Conclusions
 
-To analyze which climate and reservoir management variables influence Blue Mesa's power production, a linear regression model was used to determine variables of influence. There are eight variables that contribute to a best fit model, and the three most statistically significant variables are inflow, storage, and elevtation. Volume, flow, and climate all contribute to explaining variation in electricity generation at Blue Mesa Reservoir.
+To analyze which climate and reservoir management variables contribute to variation in Blue Mesa's power production, a linear regression model was used. Eight variables were found to contribute to the best fit model, with the three most statistically significant variables being inflow, storage, and elevation. Overall, reservoir volume, flow, and climate all contribute to explaining variation in electricity generation at Blue Mesa Reservoir.
 
-To consider how electricity generation of Blue Mesa Power Plant has changed over time, we conducted a time series analysis. No significant trend in electricity generation over time was determined both with and without the seasonality component. It is not surprising that electricity generation is not increasing due to the prolonged drought in Colorado.  Without more water feeding into Blue Mesa reservoir, there should not be enough outflow for greater electricity generation.  However, we were expecting that electricity generation would decrease with less water available in the reservoir over time. The lack of a positive or negative trend over time suggests that there may be factors unrelated to climate change contributing to the amount of electricity generation, such as state power management and electricity demand.
+In addition, to consider how electricity generation of Blue Mesa Power Plant has changed over time, we conducted a time series analysis. No significant trend in electricity generation over time was determined both with and without the seasonality component. It is not surprising that electricity generation is not increasing due to the prolonged drought in Colorado.  Without more water feeding into Blue Mesa reservoir, there should not be enough outflow for greater electricity generation. Likewise, without additional turbines added or improved technology at the power plant, the dam would not likely have capacity for increasing electricity generation either.  However, we were expecting that electricity generation would decrease over time under the assumption that water levels at the reservoir may be decreasing due to climate change. The lack of a positive or negative trend over time suggests power production at Blue Mesa Reservoir is stable and thus far unaffected by climate change.
 
-To more fully understand the factors influencing hydroelectric power production, it would be useful to conduct similar analyses of other reservoirs and hydroelectric power plants in Colorado and the west.  Comparing the results for each power plant and the specific climatic conditions for its location may give a better indication for whether changes to electricity generation are expected with climate change and worsening drought conditions.
+To more fully understand the factors influencing hydroelectric power production, it would be useful to conduct similar analyses of other reservoirs and hydroelectric power plants in Colorado and across the West.  Comparing the results for each power plant and the specific climatic conditions for its location may give a better indication for whether changes to electricity generation are expected with climate change and worsening drought conditions.
 
-We also recognize that there are many other factors that could influence hydroelectric power generation that were not considered in our analysis.  Changes in electricity demand, other energy resources' generation, and grid operating conditions likely factor into Blue Mesa power plant's real time generation.  Future analysis could focus on these factors in addition to climate and reservoir management variables.
+We also recognize that there are many other factors that could influence hydroelectric power generation that were not considered in our analysis.  Changes in electricity demand, generation from other energy resources, and grid operating conditions likely factor into Blue Mesa power plant's real time generation.  Future analysis could focus on these factors in addition to climate and reservoir management variables.
 
 
 

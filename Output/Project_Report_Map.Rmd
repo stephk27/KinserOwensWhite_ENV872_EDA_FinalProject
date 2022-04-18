@@ -1,0 +1,58 @@
+---
+title: "Final Project Map"
+author: "S.Kinser, K.Owens, C.White"
+date: "4/17/2022"
+output: html_document
+---
+
+```{r include=FALSE}
+getwd()
+```
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(tidyr)
+library(zoo)
+library(sf)
+library(trend)
+library(zoo)
+library(Kendall)
+library(tseries)
+library(data.table)
+
+#install.packages('leaflet')
+library(leaflet)
+#install.packages('mapview')
+library(mapview)
+```
+
+# Spatial Representation of Blue Mesa Reservoir
+
+```{r Create a spatial dataframe from scratch, include=FALSE}
+#Creating a spatial dataframe from known coordinates
+
+#First create a simple feature geometry object ("sfg")
+sfg_BlueMesaRes <- st_point(c(-107.309647, 38.465418))
+class(sfg_BlueMesaRes)
+mapview(sfg_BlueMesaRes)
+
+#Upgrade to a simple feature geometry column by adding a crs 
+sfc_BlueMesaRes <- st_sfc(sfg_BlueMesaRes,crs=4326)
+class(sfc_BlueMesaRes)
+mapview(sfc_BlueMesaRes)
+
+#Upgrade to a spatial dataframe
+sf_BlueMesaRes <- st_as_sf(sfc_BlueMesaRes)
+sf_BlueMesaRes$Name = 'BlueMesaRes'
+mapview(sf_BlueMesaRes)
+```
+
+```{r echo=FALSE, warning=FALSE}
+mapview(sfc_BlueMesaRes)
+```
+
+### VIEWER: Please zoom out to see Blue Mesa Reservoir.
+### Also, feel free to select ESRI.WorldImagery map option to view landscape.
