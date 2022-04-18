@@ -17,8 +17,6 @@ editor_options:
 \newpage
 \tableofcontents 
 \newpage
-\listoftables 
-\newpage
 \listoffigures 
 \newpage
 
@@ -52,6 +50,8 @@ library(knitr)
 require(knitr)
 #install.packages("kfigr")
 require(kfigr)
+#install.packages("Kendall")
+library(Kendall)
 
 # Set your ggplot theme
 mytheme <- theme_classic(base_size = 14) +
@@ -74,7 +74,9 @@ Climate patterns have a significant impact on business, health, and community we
 
 Hydroelectric power plants rely on a sufficient reservoir level to maintain power output, which can be an important source of carbon-free electricity.  We wonder how climate patterns and reservoir management have impacted hydroelectric power production.  We identified Blue Mesa Reservoir and Hydroelectric Power Plant in Colorado to explore our research questions.
 
-Blue Mesa Power Plant has a nameplate capacity of 86.2 MW and began generating power in 1967.  It is located on the Gunnison River in Colorado and it is managed by the Colorado Bureau of Reclamation.  The reservoir also provides long-term storage to ensure that Colorado is able to meet its downstream flow obligation as established in the Colorado River Compact (Blue Mesa Powerplant).\
+Blue Mesa Power Plant has a nameplate capacity of 86.2 MW and began generating power in 1967.  It is located on the Gunnison River in Colorado and it is managed by the Colorado Bureau of Reclamation.  The reservoir also provides long-term storage to ensure that Colorado is able to meet its downstream flow obligation as established in the Colorado River Compact (Blue Mesa Powerplant).
+
+To see the location of the Blue Mesa Dam in Colorado, please reference file named Project_Report_Map.html in the Output folder of our Github repository called KinserOwensWhite_ENV872_EDA_FinalProject.\
 
 **Research Questions:**
 
@@ -102,7 +104,8 @@ We sourced climate data from the Colorado Climate Center, an institute at Colora
 all.data<-read.csv("./Data/Processed/AllData.csv")
 all.data$Date<-as.Date(all.data$Date, format = "%Y-%d-%m")
 all.data<-all.data %>%
-  na.omit()
+  na.omit() %>%
+
 all.data.nodate<-select(all.data, -c(X, Date))%>%
   rename("Max Temperature" = MaxT,
          "Min Temperature" = MinT,
@@ -138,12 +141,6 @@ summary.table$Min. <- as.numeric(summary.table$Min.)
 summary.table$sd <- as.numeric(summary.table$sd)
 ```
 
-```{r tab1, include=FALSE}
-#create kable table
-summary_table <- kable(summary.table, caption = "Blue Mesa Reservoir Summary Statistics", col.names = c("Variable", "Mean", "Minimum", "Maximum", "Standard Deviation"), "pipe")
-summary_table
-
-```
 
 ```{r summary_statistics, echo=FALSE}
 #create gt table
@@ -299,7 +296,204 @@ The final regression identifies elevation, storage, evaporation, inflow, maximum
 
 ## Question 2: How has electricity generation of Blue Mesa Power Plant changed over time?
 
+```{r wrangle the data, include=FALSE, warning=FALSE}
+#getting dates in the proper format 
+climate$Date <-as.Date(climate$Date, format = "%Y-%m-%d")
+power$Date <- as.Date(power$Date, format = "%Y-%m-%d")
+reservoir$Date <- as.Date(reservoir$Date, format = "%d-%b-%y")
 
+#make a gathered data set for data viz
+climate.longer<-pivot_longer(climate, MaxT:MinT, names_to = "Min/Max", values_to = "Temperature")
+
+#make a gathered data set for data viz
+reservoir.longer<-reservoir %>%
+  pivot_longer(Inflow.cfs:Total.cfs, names_to = "Flow_Type", values_to = "Flow_(cfs)") %>%
+  pivot_longer(Storage.af:Evaporation.af, names_to = "Volume_Type", values_to = "Volume_(af)")
+
+#combine power and reservoir data
+all.data<-left_join(reservoir, climate)
+all.data<-left_join(all.data, power)
+write.csv(all.data, "AllData.csv")
+```
+
+```{r TS initial dataframe, include=FALSE, warning=FALSE}
+#create new monthly data frame with all months (in case any were missing)
+all_months <- as.data.frame(seq(as.Date("2003-01-01"), as.Date("2021-12-01"), "month"))
+
+#rename single column in all_months to Date
+colnames(all_months) <- c("Date")
+
+#combine df with ALL days with monthly df
+All_months.data <-
+  left_join(
+  all_months,
+  all.data)
+#checked data frame and should have 227 months, check!
+```
+
+
+```{r exploratory plot, echo=FALSE, warning=FALSE, message = FALSE, fig.align="center", anchor="figure", fig.cap = "Exploratory plot of electricity generation (MWH) over time.", fig.height=3, fig.width=5}
+#MWH  #using this one in ts analysis   #analyzing MWH variable over time
+ts.mhw.plot <- ggplot(All_months.data, aes(x = Date, y = MWH)) + 
+  geom_line(color = "purple") + 
+  labs(x = "Time", y = expression("Electricity Generation (MWH)")) +
+  geom_smooth(method = lm, color = "black") 
+print(ts.mhw.plot)
+```
+
+For our time series analysis, we first explore average monthly electricity generation over the years 2004-2020 as seen in `r figr('exploratory plot', TRUE, type = "figure")`. As shown by the flat trendline, there is no obvious increasing or decreasing trend in the electricity generation over time. There are apparent cycles of peaks and valleys, likely represented by seasonality. We conduct a time series analysis to further investigate. 
+
+```{r ts monthly data 2004 to 2020, include=FALSE, warning=FALSE}
+summary(All_months.data) #63 NAs are present, need to be removed
+class(All_months.data$Date) #checking class of data column
+#Remove 3 and 9 rows to get data from 2004-2020
+
+new.04_20.data <- All_months.data[All_months.data$Date >= "2004-01-01" &
+                         All_months.data$Date <= "2020-12-01", ] 
+                        #no NA rows !! Finally !!!
+summary(new.04_20.data$MWH) #confirm no NAs
+
+
+#line plot of interpolated data to fill in any gaps, if any
+ggplot(new.04_20.data) +
+  geom_line(aes(x = Date, y = MWH), color = "green") +
+  geom_line(aes(x = Date, y = MWH), color = "brown") +
+  ylab("Electricity Generation (MWH)") 
+# Good effort, no need to interpolate anything because data included were complete years between 2004-2020
+```
+
+```{r decompose, include=FALSE, warning=FALSE}
+#make ts object to decompose later
+f.month <- month(first(new.04_20.data$Date))
+f.year <- year(first(new.04_20.data$Date))
+ 
+monthly.ts <- ts(new.04_20.data$MWH, start = c(f.year, f.month), frequency=12) 
+print(monthly.ts)
+```
+
+```{r decomposed plot, echo=FALSE, warning=FALSE, message = FALSE, fig.align="center", anchor="figure", fig.cap = "Decomposed components of MWH over time to identify seasonality trend.", fig.height=4, fig.width=6}
+
+#visualize the decomposed series
+monthly.decomposed <- stl(monthly.ts, s.window = "periodic")
+plot(monthly.decomposed) #results in 4 plots
+```
+
+```{r tests w/ seasonal, include=FALSE, warning=FALSE}
+#Run a monotonic trend analysis for the monthly series with the seasonal Mann-Kendall b/c that is the only seasonal monotonic trend analysis option. 
+#run test
+MWH.monthly_SMK1 <- Kendall::SeasonalMannKendall(monthly.ts)
+
+#inspect results
+MWH.monthly_SMK1
+   ## tau = 0.0159, 2-sided pvalue =0.75719
+summary(MWH.monthly_SMK1)
+   ##  Score =  26 , Var(Score) = 7072, denominator =  1632
+    #  tau = 0.0159, 2-sided pvalue =0.75719
+
+#run 2nd test
+MWH.monthly_SMK2 <- trend::smk.test(monthly.ts)
+
+#inspect results
+MWH.monthly_SMK2
+   ##Seasonal Mann-Kendall trend test (Hirsch-Slack test)
+    # data:  monthly.ts
+    # z = 0.29728, p-value = 0.7663
+    # alternative hypothesis: true S is not equal to 0
+    # sample estimates:
+    #   S varS 
+    #  26 7072 
+
+summary(MWH.monthly_SMK2)
+   ##Seasonal Mann-Kendall trend test (Hirsch-Slack test)
+    # data: monthly.ts
+    # alternative hypothesis: two.sided
+    # Statistics for individual seasons
+    # H0
+
+smk1tau <- 0.0159
+smk1p <- 0.75719
+
+#Plot with seasonality
+MWH.monthly_SMK2_plot <- #reference cleaned data b4 making the f_month dataset
+ggplot(new.04_20.data, aes(x = Date, y = MWH)) +
+  geom_point() +
+  geom_line() +
+  ylab("MWH Monthly Mean") +
+  geom_smooth( method = lm )
+print(MWH.monthly_SMK2_plot)
+```
+\newpage 
+
+To analyze the trend in electricity generation, we decompose the dataset to extract the seasonal, trend, and remainder components.  In `r figr('decomposed plot', TRUE, type = "figure")` we can see the decomposed components of electricity generation over time. In this figure, we see that there is a strong seasonal trend that is consistent over time.  Because of this seasonal component, we first run a time series analysis including the seasonal component and then compare it to a time series analysis excluding the seasonal component.
+
+*Time Series Analysis including Seasonal Component:*\ 
+
+We used the Seasonal Mann Kendall test to test stationarity for monotonic trends. For each season of the year represented by tau, we had a value of `r smk1tau`, and a p-vlaue of `r smk1p`, which is larger than 0.05, meaning we have evidence to support the null hypothesis that there is not a significant relationship between average monthly electricity generation (MWH) and time. There is not a significant trend decreasing or increasing over time.\
+
+
+
+```{r remove seasonal component, include=FALSE, warning=FALSE}
+#Separate the components and turn them into data frame
+MWH.monthly_Components <- as.data.frame(monthly.decomposed$time.series[,1:3])
+#Exclude seasonal column and make new data frame
+MWH.monthly_NOseasonal <- MWH.monthly_Components %>%
+#  select(trend, remainder) %>% #made df without seasonal column #ma
+  mutate(meanMWH = trend + remainder) #new MWH variable to use later
+MWH.monthly_NOseasonal$Date <- new.04_20.data$Date #added date column
+
+
+#make new time series with no seasonality component, with no NA monthly data
+#create second monthly set with old monthly df that has the date info
+f.month2 <- month(first(MWH.monthly_NOseasonal$Date))
+f.year2 <- year(first(MWH.monthly_NOseasonal$Date))
+#make 2nd ts (no seasonality) for tests
+MWH.monthly.ts2 <- ts(MWH.monthly_NOseasonal$meanMWH, start = c(f.year2, f.month2), frequency=12) 
+print(MWH.monthly.ts2)
+is.ts(MWH.monthly.ts2)#check it is a ts and no longer a df
+                                # WOOHOO!!! I figured it out! <3
+```
+
+```{r run tests w/ no seasonal, include=FALSE, warning=FALSE}
+#Run the tests again
+
+#run test, no need to run smk.test b/c no trend present
+MWH_monthly_SMK1.2 <- Kendall::MannKendall(MWH.monthly.ts2)
+#inspect results
+MWH_monthly_SMK1.2
+   ## tau = 0.00212, 2-sided pvalue =0.96481
+
+summary(MWH_monthly_SMK1.2 )
+   ## Score =  44 , Var(Score) = 950175.3, denominator =  20706
+    #tau = 0.00212, 2-sided pvalue =0.96481
+
+smk2tau <- 0.00212
+smk2p <- 0.96481
+```
+
+```{r plot without seasonal component, echo=FALSE, message = FALSE, fig.align="center", fig.cap="New electricity generation (MWH) over time plot excluding seasonal component.", fig.height=3, fig.width=5, warning=FALSE, anchor="figure"}
+#plot 2 with no seasonal component
+MWH.monthly_SMK2.2_plot <- #reference cleaned data before making the f_month dataset
+ggplot(MWH.monthly_NOseasonal, aes(x = Date, y = meanMWH)) +
+  geom_line() +
+  ylab("MWH - No Seasonality ") +
+  geom_smooth(method = lm )
+print(MWH.monthly_SMK2.2_plot)
+```
+
+*Time Series Analysis excluding Seasonal Component:*\ 
+
+After removing the seasonal component and running the Mann Kendall test, tau had a value of `r smk2tau` and the p-value again was `r smk2p`, which is  more than 0.05 supporting the null hypothesis. This means even without the seasonal component there still is not a significant decreasing or increasing trend in electricity generation (MWh) over time. 
+
+Overall, with no significant trend in electricity generation over time both with and without the seasonality component makes one wonder if there are other factors involved that are influencing this outcome. Since this time series analysis was performed on transformed data, it might be worth it to further research with non-transformed data, such as inflow shown in Figure 6, to determine changes in electricity generation over time. 
+
+
+\newpage
+
+# Summary and Conclusions
+
+To analyze which climate and reservoir management variables influence Blue Mesa's power production, a linear regression model was used to determine variables of influence. There are eight variables that contribute to a best fit model, and the three most statistically significant variables are inflow, storage, and elevtation. Volume, flow, and climate all contribute to explaining variation in electricity generation at Blue Mesa Reservoir.
+
+To consider how electricity generation of Blue Mesa Power Plant has changed over time, we conducted a time series analysis. No significant trend in electricity generation over time was determined both with and without the seasonality component. It is not surprising that electricity generation is not increasing due to the prolonged drought in Colorado.  Without more water feeding into Blue Mesa reservoir, there should not be enough outflow for greater electricity generation.  However, we were expecting that electricity generation would decrease with less water available in the reservoir over time. The lack of a trend over time suggests that there may be other factors contributing to the amount of electricity generation, such as power management and electricity demand.
 
 
 \newpage
